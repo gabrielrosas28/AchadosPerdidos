@@ -91,6 +91,13 @@ fun AppPublica(
     val estado by authVM.estado.collectAsState()
     val snackbar = remember { SnackbarHostState() }
 
+    // ── Bloqueio do botão Back no nível raiz ──────────────────────────────
+    // BackHandlers internos (TelaPublicaRaiz, PainelGestor) cuidam da navegação
+    // interna; este aqui engole qualquer back que sobrar para impedir que o
+    // sistema feche o app sem PIN. A única saída legítima é long-press no
+    // mascote + PIN (que dispara stopLockTask + finishAffinity em MainActivity).
+    BackHandler(enabled = true) { /* swallow */ }
+
     val msgPinErrado     = stringResource(R.string.pin_incorreto)
     val msgAcessoGestor  = stringResource(R.string.pin_acesso_concedido)
 

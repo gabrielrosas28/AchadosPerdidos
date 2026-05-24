@@ -18,13 +18,12 @@ import java.util.concurrent.TimeUnit
 object ApiClient {
 
     /**
-     * URL padrão para desenvolvimento.
+     * URL do servidor Windows da escola (IP fixo na rede interna).
      *
-     * - **Emulador Android**: `http://10.0.2.2:5080/` aponta para o `localhost:5080` do PC host.
-     * - **Tablet físico na rede da escola**: troque pelo IP do servidor Windows
-     *   (ex.: `http://192.168.1.100:5080/`).
+     * Para **testes no emulador** (desenvolvimento), troque temporariamente
+     * para `http://10.0.2.2:5080/` (mapeia para o `localhost:5080` do PC host).
      */
-    const val BASE_URL_PADRAO = "http://10.0.2.2:5080/"
+    const val BASE_URL_PADRAO = "http://192.168.15.61:5080/"
 
     @Volatile private var instancia: ApiService? = null
     @Volatile private var configAtual: Config = Config(BASE_URL_PADRAO, "")
