@@ -106,7 +106,7 @@ class AuthViewModel : ViewModel() {
      * **TODO Passo 6:** trocar por leitura de `EncryptedSharedPreferences`,
      * configurável pelo gestor no painel.
      */
-    private val pinValido: String = "123456"
+    private val pinValido: String = "chiara123"
 
     private val _estado = MutableStateFlow<EstadoAuth>(EstadoAuth.Publico)
     val estado: StateFlow<EstadoAuth> = _estado.asStateFlow()
