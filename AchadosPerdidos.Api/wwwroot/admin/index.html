@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Gestor — Achados e Perdidos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ═══ Cabeçalho ═══════════════════════════════════════════════════════ -->
+<header>
+    <h1>👤 Achados e Perdidos — Colégio Santa Chiara</h1>
+    <div class="header-right">
+        <span id="status-conexao" class="status">…</span>
+        <button id="btn-sair" type="button">Sair</button>
+    </div>
+</header>
+
+<!-- ═══ Abas ═══════════════════════════════════════════════════════════ -->
+<nav class="tabs">
+    <button class="tab active" data-tab="itens" type="button">📦 Itens</button>
+    <button class="tab"       data-tab="categorias" type="button">📁 Categorias</button>
+    <button class="tab"       data-tab="historico"  type="button">📜 Histórico</button>
+</nav>
+
+<!-- ═══ Conteúdo das abas ═══════════════════════════════════════════════ -->
+<main>
+    <section id="tab-itens" class="tab-content active">
+        <div class="actions">
+            <button class="btn-primary" id="btn-novo-item" type="button">➕ Novo Achado</button>
+            <input type="text" id="busca-itens" placeholder="🔍 Buscar por descrição, categoria, local…">
+        </div>
+        <div id="lista-itens" class="grid"></div>
+    </section>
+
+    <section id="tab-categorias" class="tab-content">
+        <div class="actions">
+            <button class="btn-primary" id="btn-nova-categoria" type="button">➕ Nova Categoria</button>
+        </div>
+        <div id="lista-categorias" class="grid-categorias"></div>
+    </section>
+
+    <section id="tab-historico" class="tab-content">
+        <h2>Itens já devolvidos</h2>
+        <div id="lista-historico" class="lista-vertical"></div>
+    </section>
+</main>
+
+<!-- ═══ Modal: login (API key) ═════════════════════════════════════════ -->
+<div id="modal-login" class="modal" hidden>
+    <div class="modal-content">
+        <h2>🔐 Acesso ao Painel</h2>
+        <p>Digite a chave configurada em <code>appsettings.json</code> (campo <code>ApiKey</code>):</p>
+        <input type="password" id="input-api-key" placeholder="X-Api-Key" autocomplete="off">
+        <div id="erro-login" class="erro"></div>
+        <div class="modal-actions">
+            <button id="btn-entrar" class="btn-primary" type="button">Entrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ Modal: novo item ════════════════════════════════════════════════ -->
+<div id="modal-novo-item" class="modal" hidden>
+    <div class="modal-content">
+        <h2>➕ Novo Achado</h2>
+        <form id="form-novo-item">
+            <label>Foto (opcional):</label>
+            <input type="file" id="foto-arquivo" accept="image/*" capture="environment">
+            <img id="foto-preview" alt="Pré-visualização" hidden>
+
+            <label>Descrição: <span class="obrigatorio">*</span></label>
+            <input type="text" id="descricao" required placeholder="Ex: Lancheira do Homem-Aranha azul">
+
+            <label>Onde foi encontrado:</label>
+            <input type="text" id="local" placeholder="Ex: Pátio do recreio">
+
+            <label>Categoria: <span class="obrigatorio">*</span></label>
+            <select id="categoria-select" required></select>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-cancelar" data-fechar="modal-novo-item">Cancelar</button>
+                <button type="submit" class="btn-primary">✓ Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══ Modal: nova categoria ═══════════════════════════════════════════ -->
+<div id="modal-nova-categoria" class="modal" hidden>
+    <div class="modal-content">
+        <h2>📁 Nova Categoria</h2>
+        <form id="form-nova-categoria">
+            <label>Nome da categoria: <span class="obrigatorio">*</span></label>
+            <input type="text" id="categoria-nome" required placeholder="Ex: Óculos">
+
+            <div class="modal-actions">
+                <button type="button" class="btn-cancelar" data-fechar="modal-nova-categoria">Cancelar</button>
+                <button type="submit" class="btn-primary">✓ Criar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ═══ Modal: confirmar entrega ════════════════════════════════════════ -->
+<div id="modal-entregar" class="modal" hidden>
+    <div class="modal-content">
+        <h2>✔️ Confirmar Entrega</h2>
+        <p id="entregar-descricao" class="enfase"></p>
+        <p>Esta ação marca o item como <strong>devolvido</strong> e remove a foto local do tablet
+           (o registro de texto continua no histórico).</p>
+        <div class="modal-actions">
+            <button class="btn-cancelar" data-fechar="modal-entregar" type="button">Cancelar</button>
+            <button id="confirmar-entrega" class="btn-primary" type="button">Confirmar entrega</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ Toast (mensagens flash) ═════════════════════════════════════════ -->
+<div id="toast" class="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

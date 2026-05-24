@@ -37,16 +37,28 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi(); // documento OpenAPI em /openapi/v1.json
 }
 
-app.UseStaticFiles(); // serve fotos em /fotos/{arquivo}
+// Servir arquivos estáticos:
+//  - /admin/* (painel web do gestor) — wwwroot/admin/
+//  - /fotos/* (uploads de itens)     — wwwroot/fotos/
+// UseDefaultFiles faz /admin/ servir automaticamente o index.html.
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.UseCors();
 
 // Middleware de API Key (proteção do tablet -> servidor)
 app.Use(async (ctx, next) =>
 {
     var path = ctx.Request.Path;
+    // Rotas públicas (não exigem X-Api-Key):
+    //  /                  → redireciona pro painel
+    //  /info, /health     → metadados/monitoramento
+    //  /openapi/*         → documento OpenAPI
+    //  /fotos/*           → imagens (servidor de estáticos cuida disso)
+    //  /admin/*           → arquivos do painel (servido por UseStaticFiles antes daqui)
     if (path.StartsWithSegments("/openapi") ||
         path.StartsWithSegments("/fotos") ||
-        path == "/" || path == "/health")
+        path.StartsWithSegments("/admin") ||
+        path == "/" || path == "/health" || path == "/info")
     {
         await next();
         return;
@@ -68,11 +80,14 @@ app.Use(async (ctx, next) =>
     await next();
 });
 
-app.MapGet("/", () => Results.Ok(new
+// Redireciona a raiz para o Painel do Gestor (HTML estático em wwwroot/admin)
+app.MapGet("/", () => Results.Redirect("/admin/"));
+app.MapGet("/info", () => Results.Ok(new
 {
     api = "Achados & Perdidos - Colégio Santa Chiara",
     versao = "1.0.0",
-    openapi = "/openapi/v1.json"
+    openapi = "/openapi/v1.json",
+    painel = "/admin/"
 }));
 app.MapGet("/health", () => Results.Ok(new { status = "ok", hora = DateTime.UtcNow }));
 
