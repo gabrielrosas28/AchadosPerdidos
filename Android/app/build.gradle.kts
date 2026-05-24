@@ -1,19 +1,20 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)   // necessário para Jetpack Compose no Kotlin 2.x
     alias(libs.plugins.ksp)
 }
 
 android {
-    namespace = "com.escola.achadosperdidos"
+    namespace  = "com.escola.achadosperdidos"
     compileSdk = 35
 
     defaultConfig {
         applicationId = "com.escola.achadosperdidos"
-        minSdk = 24
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        minSdk        = 24
+        targetSdk     = 35
+        versionCode   = 1
+        versionName   = "1.0.0"
 
         // Exporta o schema do Room para versionamento das migrations
         ksp {
@@ -22,10 +23,17 @@ android {
         }
     }
 
+    buildFeatures {
+        compose = true   // habilita compilador do Compose
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 
@@ -46,13 +54,37 @@ android {
 }
 
 dependencies {
+    // ── Core & Lifecycle ─────────────────────────────────────────────────────
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.kotlinx.coroutines.android)
 
-    // Room
+    // ── Room ─────────────────────────────────────────────────────────────────
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+
+    // ── Jetpack Compose (via BOM — versões alinhadas automaticamente) ─────────
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.activity.compose)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+
+    // ── Retrofit + OkHttp ────────────────────────────────────────────────────
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp.logging)
+
+    // ── WorkManager ───────────────────────────────────────────────────────────
+    implementation(libs.androidx.work.runtime.ktx)
+
+    // ── Coil (carregamento de imagens locais e remotas no Compose) ────────────
+    implementation(libs.coil.compose)
 }

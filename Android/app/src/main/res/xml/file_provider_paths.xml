@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Caminhos permitidos pelo FileProvider para compartilhar arquivos de foto com o
+    intent da câmera. O diretório "fotos_itens" é criado dentro do armazenamento
+    interno privado do app (context.filesDir/fotos_itens).
+-->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <files-path
+        name="fotos_itens"
+        path="fotos_itens/" />
+</paths>
