@@ -32,6 +32,13 @@ Android/local.properties
 *.ap_
 *.dex
 
+## Build de publicação do backend (.NET)
+publish-output/
+publish/
+
+## Kotlin compile cache (gerado pelo Gradle)
+.kotlin/
+
 ## IDEs
 .idea/
 .vscode/
