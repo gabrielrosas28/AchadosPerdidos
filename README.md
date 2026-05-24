@@ -24,7 +24,7 @@ Cada subpasta tem seu próprio README com instruções de build e execução.
 
 - ✅ **Passo 1** — Back-end (API REST + modelo relacional + seed das categorias)
 - ✅ **Passo 2** — Models + Room Database (entidades, DAOs, seed local)
-- ⬜ Passo 3 — Retrofit + WorkManager (sync e limpeza automática de fotos)
+- ✅ **Passo 3** — Retrofit + WorkManager (sync offline-first, limpeza automática de fotos, FileProvider, permissões)
 - ⬜ Passo 4 — ViewModels (Modo Público vs Modo Gestor, autenticação por PIN)
 - ⬜ Passo 5 — UI do Modo Público (Compose, grades, mascote com long click)
 - ⬜ Passo 6 — UI do Modo Gestor (painel, cadastro com câmera, gestão de categorias)
