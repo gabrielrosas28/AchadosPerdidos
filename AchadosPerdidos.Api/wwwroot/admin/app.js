@@ -45,7 +45,29 @@ function toast(msg, tipo = '') {
     toast._timer = setTimeout(() => t.className = 'toast', 3500);
 }
 
-function emojiParaCategoria(nome) {
+// Emojis sugeridos no picker (em ordem)
+const EMOJIS_SUGERIDOS = [
+    '📘', '📚', '✏️', '📔',
+    '🎒', '🍱', '🥤', '🍎',
+    '🧥', '🧢', '🧣', '🧤',
+    '🧸', '⚽', '🎮', '🪀',
+    '🎀', '💍', '⌚', '👓',
+    '🔑', '📱', '💼', '👜',
+    '🥽', '🎧', '☂️', '📦'
+];
+
+/**
+ * Retorna o emoji da categoria:
+ *   1. usa o emoji explicitamente setado no servidor (cat.emoji), se houver
+ *   2. fallback heurístico baseado no nome
+ *   3. caixa genérica
+ */
+function emojiDaCategoria(cat) {
+    if (cat && cat.emoji && cat.emoji.trim()) return cat.emoji.trim();
+    return emojiParaNome(cat ? cat.nome : '');
+}
+
+function emojiParaNome(nome) {
     const n = (nome || '').toLowerCase().trim();
     if (n.includes('material'))                          return '📘';
     if (n.includes('lancheira') || n.includes('garrafa')) return '🎒';
@@ -56,6 +78,15 @@ function emojiParaCategoria(nome) {
     if (n.includes('óculos')   || n.includes('oculos'))   return '👓';
     if (n.includes('celular')  || n.includes('eletr'))    return '📱';
     return '📦';
+}
+
+/**
+ * Emoji para exibir num item da grade: procura a categoria correspondente
+ * no array local e usa o emoji explícito; senão cai no fallback por nome.
+ */
+function emojiDoItem(item) {
+    const cat = categorias.find(c => c.id === item.categoriaId);
+    return emojiDaCategoria(cat || { nome: item.categoriaNome });
 }
 
 function formatarData(iso) {
@@ -170,12 +201,35 @@ function renderCategorias() {
         return;
     }
     c.innerHTML = categorias.map(cat => `
-        <div class="card-categoria ${cat.ativa ? '' : 'inativa'}">
-            <div class="emoji">${emojiParaCategoria(cat.nome)}</div>
+        <div class="card-categoria ${cat.ativa ? '' : 'inativa'}" data-id="${cat.id}">
+            <div class="emoji">${escapeHtml(emojiDaCategoria(cat))}</div>
             <div class="nome">${escapeHtml(cat.nome)}</div>
             ${cat.ativa ? '' : '<span class="badge">Inativa</span>'}
+            ${cat.ativa
+                ? `<button class="btn-remover" title="Remover categoria" data-remover-id="${cat.id}" data-remover-nome="${escapeHtml(cat.nome)}">🗑️</button>`
+                : ''}
         </div>
     `).join('');
+
+    // Click no card -> editar; click no botão remover -> confirmar remoção
+    c.querySelectorAll('.card-categoria').forEach(card => {
+        card.addEventListener('click', e => {
+            // Se clicou no botão remover, deixa o handler dele tratar
+            if (e.target.closest('.btn-remover')) return;
+            const id = Number(card.dataset.id);
+            const cat = categorias.find(c2 => c2.id === id);
+            if (cat) abrirModalCategoria(cat);
+        });
+    });
+    c.querySelectorAll('.btn-remover').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            abrirConfirmacaoRemoverCategoria(
+                Number(btn.dataset.removerId),
+                btn.dataset.removerNome
+            );
+        });
+    });
 }
 
 function renderItens() {
@@ -203,7 +257,7 @@ function renderItens() {
             </div>
             <div class="info">
                 <h3>${escapeHtml(it.descricao)}</h3>
-                <div class="meta">${emojiParaCategoria(it.categoriaNome)} ${escapeHtml(it.categoriaNome)}</div>
+                <div class="meta">${escapeHtml(emojiDoItem(it))} ${escapeHtml(it.categoriaNome)}</div>
                 ${it.localEncontrado ? `<div class="meta">📍 ${escapeHtml(it.localEncontrado)}</div>` : ''}
                 <button class="btn-entregar" data-id="${it.id}" data-desc="${escapeHtml(it.descricao)}">
                     ✔️ Entregar
@@ -228,7 +282,7 @@ function renderHistorico() {
             <div class="check">✔️</div>
             <div class="info">
                 <div class="descricao">${escapeHtml(it.descricao)}</div>
-                <div class="meta">${emojiParaCategoria(it.categoriaNome)} ${escapeHtml(it.categoriaNome)} ·
+                <div class="meta">${escapeHtml(emojiDoItem(it))} ${escapeHtml(it.categoriaNome)} ·
                     Devolvido em ${escapeHtml(formatarData(it.dataDevolucao))}</div>
             </div>
         </div>
@@ -296,28 +350,110 @@ document.getElementById('form-novo-item').addEventListener('submit', async e => 
     }
 });
 
-// ── Nova Categoria ─────────────────────────────────────────────────────────
+// ── Categoria: criar / editar (modal unificado) ────────────────────────────
 
-document.getElementById('btn-nova-categoria').addEventListener('click', () => {
-    document.getElementById('form-nova-categoria').reset();
-    document.getElementById('modal-nova-categoria').hidden = false;
-    setTimeout(() => document.getElementById('categoria-nome').focus(), 50);
+// Preenche o grid de sugestões de emoji uma única vez
+(function popularEmojiSugestoes() {
+    const grid = document.getElementById('emoji-sugestoes');
+    grid.innerHTML = EMOJIS_SUGERIDOS.map(e =>
+        `<button type="button" class="emoji-btn" data-emoji="${e}">${e}</button>`
+    ).join('');
+    grid.querySelectorAll('.emoji-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('categoria-emoji').value = btn.dataset.emoji;
+            marcarEmojiSelecionado(btn.dataset.emoji);
+        });
+    });
+})();
+
+function marcarEmojiSelecionado(emoji) {
+    document.querySelectorAll('#emoji-sugestoes .emoji-btn').forEach(b => {
+        b.classList.toggle('selecionado', b.dataset.emoji === emoji);
+    });
+}
+
+// Sincroniza o destaque no picker quando o usuário digita/cola
+document.getElementById('categoria-emoji').addEventListener('input', e => {
+    marcarEmojiSelecionado(e.target.value.trim());
 });
 
-document.getElementById('form-nova-categoria').addEventListener('submit', async e => {
+/** Abre o modal em modo "criar" (cat = null) ou "editar" (cat = objeto). */
+function abrirModalCategoria(cat) {
+    const editando = !!cat;
+    document.getElementById('categoria-id').value = editando ? cat.id : '';
+    document.getElementById('categoria-nome').value = editando ? cat.nome : '';
+    document.getElementById('categoria-emoji').value = editando && cat.emoji ? cat.emoji : '';
+    document.getElementById('categoria-ativa').checked = editando ? cat.ativa : true;
+    document.getElementById('categoria-ativa-wrap').hidden = !editando;
+    document.getElementById('categoria-modal-titulo').textContent =
+        editando ? '✏️ Editar Categoria' : '📁 Nova Categoria';
+    document.getElementById('btn-salvar-categoria').textContent =
+        editando ? '✓ Salvar alterações' : '✓ Criar';
+    marcarEmojiSelecionado(editando && cat.emoji ? cat.emoji : '');
+    document.getElementById('modal-categoria').hidden = false;
+    setTimeout(() => document.getElementById('categoria-nome').focus(), 50);
+}
+
+document.getElementById('btn-nova-categoria').addEventListener('click', () => {
+    abrirModalCategoria(null);
+});
+
+document.getElementById('form-categoria').addEventListener('submit', async e => {
     e.preventDefault();
-    const nome = document.getElementById('categoria-nome').value.trim();
+    const id    = document.getElementById('categoria-id').value;
+    const nome  = document.getElementById('categoria-nome').value.trim();
+    const emoji = document.getElementById('categoria-emoji').value.trim();
+    const ativa = document.getElementById('categoria-ativa').checked;
     if (!nome) return;
-    const btn = e.target.querySelector('button[type="submit"]');
+
+    const btn = document.getElementById('btn-salvar-categoria');
     btn.disabled = true;
     try {
-        await api('/api/categorias', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nome: nome, idLocalTablet: null })
-        });
-        toast('Categoria criada!', 'sucesso');
-        document.getElementById('modal-nova-categoria').hidden = true;
+        if (id) {
+            // Editar (PUT)
+            await api(`/api/categorias/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nome, ativa, emoji: emoji || null })
+            });
+            toast('Categoria atualizada!', 'sucesso');
+        } else {
+            // Criar (POST)
+            await api('/api/categorias', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nome, emoji: emoji || null, idLocalTablet: null })
+            });
+            toast('Categoria criada!', 'sucesso');
+        }
+        document.getElementById('modal-categoria').hidden = true;
+        await carregarCategorias();
+    } catch (err) {
+        toast('Erro: ' + err.message, 'erro');
+    } finally {
+        btn.disabled = false;
+    }
+});
+
+// ── Remover categoria (soft-delete) ────────────────────────────────────────
+
+let idCategoriaParaRemover = null;
+
+function abrirConfirmacaoRemoverCategoria(id, nome) {
+    idCategoriaParaRemover = id;
+    document.getElementById('remover-categoria-nome').textContent = `"${nome}"`;
+    document.getElementById('modal-remover-categoria').hidden = false;
+}
+
+document.getElementById('confirmar-remover-categoria').addEventListener('click', async () => {
+    if (!idCategoriaParaRemover) return;
+    const btn = document.getElementById('confirmar-remover-categoria');
+    btn.disabled = true;
+    try {
+        await api(`/api/categorias/${idCategoriaParaRemover}`, { method: 'DELETE' });
+        toast('Categoria removida!', 'sucesso');
+        document.getElementById('modal-remover-categoria').hidden = true;
+        idCategoriaParaRemover = null;
         await carregarCategorias();
     } catch (err) {
         toast('Erro: ' + err.message, 'erro');

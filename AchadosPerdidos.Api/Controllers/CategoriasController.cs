@@ -21,7 +21,7 @@ public class CategoriasController : ControllerBase
 
         var lista = await q
             .OrderBy(c => c.Nome)
-            .Select(c => new CategoriaDto(c.Id, c.Nome, c.Ativa, c.DataCriacao))
+            .Select(c => new CategoriaDto(c.Id, c.Nome, c.Ativa, c.DataCriacao, c.Emoji))
             .ToListAsync();
 
         return Ok(lista);
@@ -32,7 +32,7 @@ public class CategoriasController : ControllerBase
     {
         var c = await _db.Categorias.FindAsync(id);
         if (c is null) return NotFound();
-        return new CategoriaDto(c.Id, c.Nome, c.Ativa, c.DataCriacao);
+        return new CategoriaDto(c.Id, c.Nome, c.Ativa, c.DataCriacao, c.Emoji);
     }
 
     [HttpPost]
@@ -45,12 +45,17 @@ public class CategoriasController : ControllerBase
         var existe = await _db.Categorias.AnyAsync(c => c.Nome == nome);
         if (existe) return Conflict("Já existe uma categoria com este nome.");
 
-        var c = new Categoria { Nome = nome, IdLocalTablet = dto.IdLocalTablet };
+        var c = new Categoria
+        {
+            Nome = nome,
+            Emoji = string.IsNullOrWhiteSpace(dto.Emoji) ? null : dto.Emoji.Trim(),
+            IdLocalTablet = dto.IdLocalTablet
+        };
         _db.Categorias.Add(c);
         await _db.SaveChangesAsync();
 
         return CreatedAtAction(nameof(Obter), new { id = c.Id },
-            new CategoriaDto(c.Id, c.Nome, c.Ativa, c.DataCriacao));
+            new CategoriaDto(c.Id, c.Nome, c.Ativa, c.DataCriacao, c.Emoji));
     }
 
     [HttpPut("{id:int}")]
@@ -61,6 +66,7 @@ public class CategoriasController : ControllerBase
 
         c.Nome = dto.Nome.Trim();
         c.Ativa = dto.Ativa;
+        c.Emoji = string.IsNullOrWhiteSpace(dto.Emoji) ? null : dto.Emoji.Trim();
         await _db.SaveChangesAsync();
         return NoContent();
     }

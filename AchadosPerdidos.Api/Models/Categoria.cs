@@ -13,6 +13,13 @@ public class Categoria
 
     public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
 
+    /// <summary>
+    /// Emoji escolhido pelo gestor (opcional). Quando null, o cliente faz
+    /// fallback para uma heurística baseada no nome.
+    /// </summary>
+    [MaxLength(16)]
+    public string? Emoji { get; set; }
+
     [MaxLength(64)]
     public string? IdLocalTablet { get; set; }
 

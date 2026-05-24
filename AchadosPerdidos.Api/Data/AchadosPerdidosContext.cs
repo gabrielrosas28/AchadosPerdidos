@@ -36,11 +36,11 @@ public class AchadosPerdidosContext : DbContext
         // --- Seed das categorias iniciais ---
         var seedDate = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         mb.Entity<Categoria>().HasData(
-            new Categoria { Id = 1, Nome = "Material didático",     Ativa = true, DataCriacao = seedDate },
-            new Categoria { Id = 2, Nome = "Lancheiras e garrafas", Ativa = true, DataCriacao = seedDate },
-            new Categoria { Id = 3, Nome = "Casacos",               Ativa = true, DataCriacao = seedDate },
-            new Categoria { Id = 4, Nome = "Brinquedos",            Ativa = true, DataCriacao = seedDate },
-            new Categoria { Id = 5, Nome = "Xuxinhas",              Ativa = true, DataCriacao = seedDate }
+            new Categoria { Id = 1, Nome = "Material didático",     Ativa = true, DataCriacao = seedDate, Emoji = "📘" },
+            new Categoria { Id = 2, Nome = "Lancheiras e garrafas", Ativa = true, DataCriacao = seedDate, Emoji = "🎒" },
+            new Categoria { Id = 3, Nome = "Casacos",               Ativa = true, DataCriacao = seedDate, Emoji = "🧥" },
+            new Categoria { Id = 4, Nome = "Brinquedos",            Ativa = true, DataCriacao = seedDate, Emoji = "🧸" },
+            new Categoria { Id = 5, Nome = "Xuxinhas",              Ativa = true, DataCriacao = seedDate, Emoji = "🎀" }
         );
     }
 }

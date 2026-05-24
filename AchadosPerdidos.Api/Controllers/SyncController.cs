@@ -82,7 +82,7 @@ public class SyncController : ControllerBase
         if (desde.HasValue) q = q.Where(c => c.DataCriacao >= desde.Value);
 
         var lista = await q
-            .Select(c => new CategoriaDto(c.Id, c.Nome, c.Ativa, c.DataCriacao))
+            .Select(c => new CategoriaDto(c.Id, c.Nome, c.Ativa, c.DataCriacao, c.Emoji))
             .ToListAsync();
 
         return Ok(lista);

@@ -86,19 +86,48 @@
     </div>
 </div>
 
-<!-- ═══ Modal: nova categoria ═══════════════════════════════════════════ -->
-<div id="modal-nova-categoria" class="modal" hidden>
+<!-- ═══ Modal: nova/editar categoria ════════════════════════════════════ -->
+<div id="modal-categoria" class="modal" hidden>
     <div class="modal-content">
-        <h2>📁 Nova Categoria</h2>
-        <form id="form-nova-categoria">
+        <h2 id="categoria-modal-titulo">📁 Nova Categoria</h2>
+        <form id="form-categoria">
+            <input type="hidden" id="categoria-id">
+
             <label>Nome da categoria: <span class="obrigatorio">*</span></label>
-            <input type="text" id="categoria-nome" required placeholder="Ex: Óculos">
+            <input type="text" id="categoria-nome" required placeholder="Ex: Óculos" maxlength="100">
+
+            <label>Emoji:</label>
+            <input type="text" id="categoria-emoji" placeholder="Cole um emoji ou clique abaixo" maxlength="8">
+
+            <div class="emoji-grid" id="emoji-sugestoes">
+                <!-- Botões de sugestão preenchidos via JS -->
+            </div>
+
+            <label class="checkbox-label" id="categoria-ativa-wrap" hidden>
+                <input type="checkbox" id="categoria-ativa">
+                <span>Categoria ativa (desmarque para desativar)</span>
+            </label>
 
             <div class="modal-actions">
-                <button type="button" class="btn-cancelar" data-fechar="modal-nova-categoria">Cancelar</button>
-                <button type="submit" class="btn-primary">✓ Criar</button>
+                <button type="button" class="btn-cancelar" data-fechar="modal-categoria">Cancelar</button>
+                <button type="submit" class="btn-primary" id="btn-salvar-categoria">✓ Criar</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- ═══ Modal: confirmar remoção de categoria ═══════════════════════════ -->
+<div id="modal-remover-categoria" class="modal" hidden>
+    <div class="modal-content">
+        <h2>🗑️ Remover Categoria</h2>
+        <p id="remover-categoria-nome" class="enfase"></p>
+        <p>A categoria será <strong>desativada</strong> (não aparece mais na grade
+           do tablet nem na lista de cadastro). Itens já cadastrados nela continuam
+           no histórico. Você pode reativar depois clicando no item desativado.</p>
+        <div class="modal-actions">
+            <button class="btn-cancelar" data-fechar="modal-remover-categoria" type="button">Cancelar</button>
+            <button id="confirmar-remover-categoria" class="btn-danger" type="button">Sim, remover</button>
+        </div>
     </div>
 </div>
 

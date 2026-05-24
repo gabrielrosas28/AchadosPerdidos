@@ -123,6 +123,16 @@ button:active { transform: scale(0.97); }
 }
 .btn-cancelar:hover { background: #CFD8DC; }
 
+.btn-danger {
+    background: var(--vermelho);
+    color: var(--branco);
+    border: none;
+    padding: 12px 28px;
+    border-radius: 28px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.btn-danger:hover { background: #C62828; box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+
 #btn-sair {
     background: rgba(255,255,255,0.15);
     color: var(--branco);
@@ -194,9 +204,12 @@ button:active { transform: scale(0.97); }
     align-items: center;
     gap: 16px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.2s;
 }
-.card-categoria.inativa { opacity: 0.5; }
-.card-categoria .emoji { font-size: 40px; }
+.card-categoria:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+.card-categoria.inativa { opacity: 0.55; background: var(--cinza-claro); }
+.card-categoria .emoji { font-size: 40px; min-width: 56px; text-align: center; }
 .card-categoria .nome { flex: 1; font-size: 18px; font-weight: 500; color: var(--cinza-texto); }
 .card-categoria .badge {
     background: var(--vermelho);
@@ -204,6 +217,58 @@ button:active { transform: scale(0.97); }
     padding: 3px 10px;
     border-radius: 12px;
     font-size: 12px;
+}
+.card-categoria .btn-remover {
+    background: transparent;
+    color: var(--vermelho);
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 8px;
+    transition: background 0.15s;
+}
+.card-categoria .btn-remover:hover { background: var(--vermelho-claro); }
+
+/* ── Emoji picker (grid de sugestões nos modais) ──────────────────────── */
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+    gap: 6px;
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+.emoji-grid .emoji-btn {
+    background: var(--cinza-claro);
+    border: 2px solid transparent;
+    border-radius: 10px;
+    padding: 8px;
+    font-size: 28px;
+    cursor: pointer;
+    transition: all 0.15s;
+    line-height: 1;
+}
+.emoji-grid .emoji-btn:hover     { background: var(--azul-claro); transform: scale(1.1); }
+.emoji-grid .emoji-btn.selecionado {
+    background: var(--azul-claro);
+    border-color: var(--azul-escuro);
+    transform: scale(1.05);
+}
+
+.checkbox-label {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px !important;
+    color: var(--cinza-texto) !important;
+    cursor: pointer;
+    font-weight: 500 !important;
+}
+.checkbox-label input[type="checkbox"] {
+    width: auto !important;
+    margin: 0 !important;
+    cursor: pointer;
+    transform: scale(1.4);
 }
 
 /* ── Lista vertical (histórico) ──────────────────────────────────────── */
