@@ -6,6 +6,7 @@ import com.escola.achadosperdidos.data.local.CategoriaDao
 import com.escola.achadosperdidos.data.local.ItemDao
 import com.escola.achadosperdidos.data.model.Categoria
 import com.escola.achadosperdidos.data.network.dto.CriarCategoriaDto
+import com.escola.achadosperdidos.data.network.dto.StatusServidor
 import com.escola.achadosperdidos.data.network.dto.SyncItemDto
 import java.io.File
 import java.text.SimpleDateFormat
@@ -16,10 +17,11 @@ import java.util.*
  *
  * **Fluxo:**
  * 1. Envia ao servidor categorias criadas localmente que ainda não têm [idServidor].
- * 2. Envia ao servidor itens marcados como [sincronizado = false].
+ * 2. Envia ao servidor itens marcados como `sincronizado = false`.
  * 3. Baixa categorias novas/alteradas no servidor e insere localmente.
  *
- * Chamado pelo [LimpezaFotoWorker] (diariamente) ou manualmente pelo gestor.
+ * Chamado pelo [com.escola.achadosperdidos.data.worker.LimpezaFotoWorker]
+ * (diariamente) ou manualmente pelo gestor.
  */
 class SyncRepository(
     private val api: ApiService,
@@ -39,8 +41,8 @@ class SyncRepository(
     // ── 1. Enviar categorias novas para o servidor ────────────────────────────
 
     /**
-     * Busca todas as categorias sem [idServidor] e as cria na API.
-     * Em caso de erro individual, loga e continua com as demais.
+     * Cria no servidor cada categoria sem [idServidor].
+     * Erros individuais não interrompem o lote.
      */
     suspend fun sincronizarCategorias() {
         val novas = categoriaDao.obterNaoSincronizadas()
@@ -61,8 +63,11 @@ class SyncRepository(
     // ── 2. Enviar itens pendentes para o servidor ─────────────────────────────
 
     /**
-     * Coleta itens com [sincronizado = false], monta o payload de sync e envia em lote.
-     * A foto é lida do disco e encodada em Base64 (enviada junto no payload JSON).
+     * Coleta itens com `sincronizado = false`, monta o payload e envia em lote.
+     * A foto local é lida do disco e codificada em Base64.
+     *
+     * Só marca os itens como sincronizados se o servidor retornar sem erros —
+     * caso contrário, deixa para tentar novamente no próximo ciclo do Worker.
      */
     suspend fun sincronizarItens() {
         val pendentes = itemDao.obterNaoSincronizados()
@@ -73,63 +78,66 @@ class SyncRepository(
 
         Log.d(TAG, "Sincronizando ${pendentes.size} itens pendentes...")
 
-        val lote = pendentes.mapNotNull { item ->
+        // Monta o lote, pulando itens cuja categoria ainda não existe (raro).
+        val enviar = mutableListOf<Pair<com.escola.achadosperdidos.data.model.Item, SyncItemDto>>()
+        for (item in pendentes) {
             val cat = categoriaDao.obterPorId(item.categoriaId)
             if (cat == null) {
                 Log.w(TAG, "Item id=${item.id} ignorado: categoria ${item.categoriaId} não encontrada.")
-                return@mapNotNull null
+                continue
             }
-
-            // Lê a foto local e codifica em Base64 (somente se o arquivo ainda existir)
             val (fotoBase64, nomeFoto) = lerFotoComoBase64(item.caminhoFoto)
 
-            SyncItemDto(
+            enviar += item to SyncItemDto(
                 descricao              = item.descricao,
-                localEncontrado       = item.localEncontrado,
-                categoriaServidorId   = cat.idServidor,
+                localEncontrado        = item.localEncontrado,
+                categoriaServidorId    = cat.idServidor,
                 categoriaIdLocalTablet = cat.idLocalTablet,
-                status                = item.status.name,
-                dataCadastro          = FMT_ISO.format(item.dataCadastro),
-                dataDevolucao         = item.dataDevolucao?.let { FMT_ISO.format(it) },
-                tabletId              = item.tabletId,
-                idLocalTablet         = item.idLocalTablet,
-                fotoBase64            = fotoBase64,
-                nomeArquivoFoto       = nomeFoto
+                status                 = StatusServidor.paraOrdinal(item.status),
+                dataCadastro           = FMT_ISO.format(item.dataCadastro),
+                dataDevolucao          = item.dataDevolucao?.let { FMT_ISO.format(it) },
+                tabletId               = item.tabletId,
+                idLocalTablet          = item.idLocalTablet,
+                fotoBase64             = fotoBase64,
+                nomeArquivoFoto        = nomeFoto
             )
         }
-
-        if (lote.isEmpty()) return
+        if (enviar.isEmpty()) return
 
         try {
-            val resposta = api.sincronizarItens(lote)
+            val resposta = api.sincronizarItens(enviar.map { it.second })
             Log.i(TAG, "Sync OK — criados=${resposta.criados}, " +
                     "atualizados=${resposta.atualizados}, erros=${resposta.erros.size}")
 
             if (resposta.erros.isNotEmpty()) {
-                Log.w(TAG, "Erros do servidor: ${resposta.erros.joinToString()}")
+                // Política conservadora: se houve QUALQUER erro, não marca nada como sincronizado;
+                // o batch atual da API não retorna correspondência item→erro, então não dá pra
+                // saber quais especificamente falharam. Próximo ciclo do Worker tenta de novo.
+                Log.w(TAG, "Erros do servidor (mantendo itens pendentes): " +
+                        resposta.erros.joinToString())
+                return
             }
 
-            // Marca localmente como sincronizados.
-            // Obs.: a rota de batch atual não retorna IDs individuais;
-            // quando o servidor suportar, atualize aqui para persistir idServidor correto.
-            pendentes.forEach { item ->
+            // Sucesso total — marca todos como sincronizados.
+            // idServidor fica null porque o batch não retorna IDs individuais.
+            enviar.forEach { (item, _) ->
                 itemDao.marcarSincronizado(
-                    id                    = item.id,
-                    idServidor            = item.idServidor ?: 0,
+                    id                      = item.id,
+                    idServidor              = null,
                     nomeArquivoFotoServidor = item.nomeArquivoFotoServidor
                 )
             }
         } catch (e: Exception) {
             Log.e(TAG, "Falha ao enviar lote de itens: ${e.message}")
-            // Não relança — o WorkManager vai retry automaticamente
+            // Não relança — WorkManager retentará no próximo ciclo.
         }
     }
 
     // ── 3. Baixar categorias do servidor ─────────────────────────────────────
 
     /**
-     * Baixa as categorias do servidor e insere as que ainda não existem localmente.
-     * Usa [CategoriaDao.inserirSeNaoExiste] para garantir idempotência.
+     * Baixa categorias do servidor e insere localmente as ausentes.
+     * Usa [CategoriaDao.obterPorIdServidor] para idempotência (não cria duplicatas).
      */
     suspend fun baixarCategorias() {
         try {
@@ -137,9 +145,8 @@ class SyncRepository(
             Log.d(TAG, "Recebidas ${remotas.size} categorias do servidor.")
 
             remotas.forEach { dto ->
-                // Verifica se já existe pelo idServidor para não duplicar
-                val existente = categoriaDao.obterPorId(dto.id.toLong())
-                if (existente == null) {
+                val jaExiste = categoriaDao.obterPorIdServidor(dto.id) != null
+                if (!jaExiste) {
                     categoriaDao.inserirSeNaoExiste(
                         Categoria(
                             nome       = dto.nome,
@@ -147,7 +154,7 @@ class SyncRepository(
                             idServidor = dto.id
                         )
                     )
-                    Log.d(TAG, "Nova categoria recebida: '${dto.nome}' (id=${dto.id})")
+                    Log.d(TAG, "Nova categoria recebida: '${dto.nome}' (id servidor=${dto.id})")
                 }
             }
         } catch (e: Exception) {
@@ -158,8 +165,8 @@ class SyncRepository(
     // ── Ponto de entrada único ────────────────────────────────────────────────
 
     /**
-     * Executa todo o ciclo de sincronização na ordem correta:
-     * categorias primeiro (itens dependem dos IDs das categorias).
+     * Executa o ciclo completo na ordem correta — categorias antes dos itens,
+     * pois itens precisam que suas categorias já estejam mapeadas no servidor.
      */
     suspend fun sincronizarTudo() {
         sincronizarCategorias()

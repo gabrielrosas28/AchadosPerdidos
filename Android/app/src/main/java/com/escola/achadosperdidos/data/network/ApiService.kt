@@ -2,16 +2,19 @@ package com.escola.achadosperdidos.data.network
 
 import com.escola.achadosperdidos.data.network.dto.*
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import retrofit2.Response
 import retrofit2.http.*
 
 /**
  * Interface Retrofit que mapeia os endpoints da API REST do servidor Windows.
  *
- * Todos os métodos são `suspend` — devem ser chamados de uma coroutine (ex: ViewModel ou Worker).
+ * Todos os métodos são `suspend` — devem ser chamados de uma coroutine
+ * (ex: ViewModel ou Worker).
  */
 interface ApiService {
 
-    // ── Sincronização offline-first ──────────────────────────────────────────
+    // ── Sincronização offline-first (uso primário do tablet) ──────────────────
 
     /**
      * Envia em lote todos os itens pendentes de sincronização do tablet.
@@ -28,41 +31,49 @@ interface ApiService {
     @GET("api/sync/categorias")
     suspend fun baixarCategorias(@Query("desde") desde: String? = null): List<CategoriaDto>
 
-    // ── Categorias ───────────────────────────────────────────────────────────
+    // ── Categorias ────────────────────────────────────────────────────────────
 
     @GET("api/categorias")
-    suspend fun listarCategorias(): List<CategoriaDto>
+    suspend fun listarCategorias(@Query("somenteAtivas") somenteAtivas: Boolean = true): List<CategoriaDto>
 
     @POST("api/categorias")
     suspend fun criarCategoria(@Body dto: CriarCategoriaDto): CategoriaDto
 
-    // ── Itens ────────────────────────────────────────────────────────────────
+    // ── Itens ─────────────────────────────────────────────────────────────────
 
     @GET("api/itens")
-    suspend fun listarItens(): List<ItemDto>
-
-    @POST("api/itens")
-    suspend fun criarItem(@Body dto: CriarItemDto): ItemDto
+    suspend fun listarItens(
+        @Query("categoriaId") categoriaId: Int? = null,
+        @Query("status") status: Int? = null
+    ): List<ItemDto>
 
     /**
-     * Atualiza o status de um item (ex: marcar como Devolvido).
-     * Rota: PUT /api/itens/{id}/status
+     * Cria um item enviando seus campos + foto opcional em **multipart/form-data**.
+     * Backend: `ItensController.Criar` com `[FromForm] CriarItemDto` + `IFormFile? foto`.
+     *
+     * Use [Multiparts] para construir os RequestBody's de forma legível.
      */
-    @PUT("api/itens/{id}/status")
+    @Multipart
+    @POST("api/itens")
+    suspend fun criarItem(
+        @Part("Descricao")        descricao: RequestBody,
+        @Part("LocalEncontrado")  localEncontrado: RequestBody?,
+        @Part("CategoriaId")      categoriaId: RequestBody,
+        @Part("TabletId")         tabletId: RequestBody?,
+        @Part("IdLocalTablet")    idLocalTablet: RequestBody?,
+        @Part                     foto: MultipartBody.Part?
+    ): ItemDto
+
+    /**
+     * Atualiza apenas o status do item (ex: marcar como Devolvido).
+     * Backend: `[HttpPatch("{id:int}/status")]` → retorna **204 No Content**.
+     */
+    @PATCH("api/itens/{id}/status")
     suspend fun atualizarStatus(
         @Path("id") id: Int,
         @Body dto: AtualizarStatusItemDto
-    ): ItemDto
+    ): Response<Unit>
 
-    /**
-     * Faz o upload da foto de um item como multipart.
-     * Rota: POST /api/itens/{id}/foto
-     * Part name esperado pelo servidor: "foto"
-     */
-    @Multipart
-    @POST("api/itens/{id}/foto")
-    suspend fun uploadFoto(
-        @Path("id") id: Int,
-        @Part foto: MultipartBody.Part
-    ): ItemDto
+    @DELETE("api/itens/{id}")
+    suspend fun removerItem(@Path("id") id: Int): Response<Unit>
 }

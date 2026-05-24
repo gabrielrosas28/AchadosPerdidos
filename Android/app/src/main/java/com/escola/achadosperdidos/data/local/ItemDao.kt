@@ -81,6 +81,11 @@ interface ItemDao {
     @Query("UPDATE itens SET caminhoFoto = NULL WHERE id = :id")
     suspend fun limparCaminhoFoto(id: Long)
 
+    /**
+     * Marca como sincronizado.
+     * [idServidor] pode ser null porque o endpoint de batch não retorna IDs individuais;
+     * uma futura chamada a [observarTodos]/sync delta preencherá quando disponível.
+     */
     @Query("""
         UPDATE itens
            SET sincronizado = 1,
@@ -88,7 +93,7 @@ interface ItemDao {
                nomeArquivoFotoServidor = :nomeArquivoFotoServidor
          WHERE id = :id
     """)
-    suspend fun marcarSincronizado(id: Long, idServidor: Int, nomeArquivoFotoServidor: String?)
+    suspend fun marcarSincronizado(id: Long, idServidor: Int?, nomeArquivoFotoServidor: String?)
 
     @Delete
     suspend fun remover(i: Item)

@@ -102,8 +102,8 @@ class LimpezaFotoWorker(
 
         // ── 2. Sincronização com o servidor (best-effort) ─────────────────────
         try {
-            val api  = ApiClient.criar()   // URL padrão; futuro: ler de SharedPreferences
-            val sync = SyncRepository(api, catDao, itemDao)
+            // Usa o singleton (já configurado em AchadosPerdidosApp.onCreate).
+            val sync = SyncRepository(ApiClient.obter(), catDao, itemDao)
             sync.sincronizarTudo()
             Log.i(TAG, "Sincronização com servidor concluída.")
         } catch (e: Exception) {
