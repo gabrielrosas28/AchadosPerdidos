@@ -1,0 +1,46 @@
+package com.escola.achadosperdidos.data.local
+
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
+import com.escola.achadosperdidos.data.model.Categoria
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface CategoriaDao {
+
+    @Query("SELECT * FROM categorias WHERE ativa = 1 ORDER BY nome")
+    fun observarAtivas(): Flow<List<Categoria>>
+
+    @Query("SELECT * FROM categorias ORDER BY nome")
+    fun observarTodas(): Flow<List<Categoria>>
+
+    @Query("SELECT * FROM categorias WHERE id = :id")
+    suspend fun obterPorId(id: Long): Categoria?
+
+    @Query("SELECT * FROM categorias WHERE idLocalTablet = :uuid LIMIT 1")
+    suspend fun obterPorUuid(uuid: String): Categoria?
+
+    @Query("SELECT * FROM categorias WHERE idServidor IS NULL")
+    suspend fun obterNaoSincronizadas(): List<Categoria>
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun inserir(c: Categoria): Long
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun inserirSeNaoExiste(c: Categoria): Long
+
+    @Update
+    suspend fun atualizar(c: Categoria)
+
+    @Query("UPDATE categorias SET ativa = 0 WHERE id = :id")
+    suspend fun desativar(id: Long)
+
+    @Query("UPDATE categorias SET idServidor = :idServidor WHERE id = :id")
+    suspend fun marcarSincronizada(id: Long, idServidor: Int)
+
+    @Query("SELECT COUNT(*) FROM categorias")
+    suspend fun contar(): Int
+}
