@@ -55,11 +55,11 @@ fun GradeCategorias(
         )
 
         LazyVerticalGrid(
-            // 3 colunas como no mockup; cresce/encolhe conforme o tablet
-            columns = GridCells.Fixed(3),
-            contentPadding = PaddingValues(24.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-            horizontalArrangement = Arrangement.spacedBy(20.dp),
+            // Adaptativo: em tablet portrait ~800dp dá 2-3 cols; landscape dá mais.
+            columns = GridCells.Adaptive(minSize = 200.dp),
+            contentPadding = PaddingValues(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxSize()
         ) {
             items(categorias, key = { it.id }) { cat ->

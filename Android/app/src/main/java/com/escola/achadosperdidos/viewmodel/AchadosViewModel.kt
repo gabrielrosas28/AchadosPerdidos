@@ -73,12 +73,13 @@ class AchadosViewModel(application: Application) : AndroidViewModel(application)
     val busca: StateFlow<String> = _busca.asStateFlow()
 
     /**
-     * Quando `true`, mostra apenas itens com status [StatusItem.Encontrado]
-     * (Modo Público). Quando `false`, inclui Devolvido e Expirado
-     * (Histórico do gestor).
+     * Filtro por status:
+     *  - [StatusItem.Encontrado] (default) — Modo Público / tela "Entregar Item"
+     *  - [StatusItem.Devolvido]            — tela "Histórico" do gestor
+     *  - `null`                            — todos os status
      */
-    private val _somenteDisponiveis = MutableStateFlow(true)
-    val somenteDisponiveis: StateFlow<Boolean> = _somenteDisponiveis.asStateFlow()
+    private val _statusFiltro = MutableStateFlow<StatusItem?>(StatusItem.Encontrado)
+    val statusFiltro: StateFlow<StatusItem?> = _statusFiltro.asStateFlow()
 
     // ── Categorias (reativo a partir do Room) ───────────────────────────────
 
@@ -105,10 +106,10 @@ class AchadosViewModel(application: Application) : AndroidViewModel(application)
     val itens: StateFlow<List<ItemComCategoria>> = combine(
         _categoriaSelecionada,
         _busca,
-        _somenteDisponiveis
-    ) { catId, busca, somenteDisp ->
-        Triple(catId, busca, somenteDisp)
-    }.flatMapLatest { (catId, busca, somenteDisp) ->
+        _statusFiltro
+    ) { catId, busca, status ->
+        Triple(catId, busca, status)
+    }.flatMapLatest { (catId, busca, status) ->
         val base = if (catId != null) {
             itemDao.observarPorCategoria(catId)
         } else {
@@ -117,8 +118,8 @@ class AchadosViewModel(application: Application) : AndroidViewModel(application)
 
         base.map { lista ->
             var resultado: List<ItemComCategoria> = lista
-            if (somenteDisp) {
-                resultado = resultado.filter { it.item.status == StatusItem.Encontrado }
+            if (status != null) {
+                resultado = resultado.filter { it.item.status == status }
             }
             val q = busca.trim()
             if (q.isNotEmpty()) {
@@ -142,14 +143,14 @@ class AchadosViewModel(application: Application) : AndroidViewModel(application)
         _busca.value = query
     }
 
-    fun setSomenteDisponiveis(somente: Boolean) {
-        _somenteDisponiveis.value = somente
+    fun setStatusFiltro(status: StatusItem?) {
+        _statusFiltro.value = status
     }
 
     fun limparFiltros() {
         _categoriaSelecionada.value = null
         _busca.value = ""
-        _somenteDisponiveis.value = true
+        _statusFiltro.value = StatusItem.Encontrado
     }
 
     // ── Cadastro e atualização ──────────────────────────────────────────────

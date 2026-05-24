@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.escola.achadosperdidos.R
 import com.escola.achadosperdidos.data.local.ItemComCategoria
+import com.escola.achadosperdidos.ui.admin.PainelGestor
 import com.escola.achadosperdidos.viewmodel.AchadosViewModel
 import com.escola.achadosperdidos.viewmodel.AuthViewModel
 import com.escola.achadosperdidos.viewmodel.EstadoAuth
@@ -116,7 +117,10 @@ fun AppPublica(
 
             when (estado) {
                 EstadoAuth.Gestor -> {
-                    PainelGestorPlaceholder(onSair = authVM::sairModoGestor)
+                    PainelGestor(
+                        achadosVM = achadosVM,
+                        onSair    = authVM::sairModoGestor
+                    )
                 }
                 else -> {
                     TelaPublicaRaiz(
@@ -339,46 +343,4 @@ private fun Mascote(
     }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-//  Placeholder do Painel do Gestor (implementação real no Passo 6)
-// ════════════════════════════════════════════════════════════════════════════
-
-@Composable
-private fun PainelGestorPlaceholder(onSair: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = "👤 Painel do Gestor",
-                style = MaterialTheme.typography.displaySmall,
-                color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = "Implementação completa no Passo 6 — Novo Achado, Nova Categoria, Entregar Item, Histórico.",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 48.dp)
-            )
-            Spacer(Modifier.height(16.dp))
-            Button(
-                onClick = onSair,
-                shape   = RoundedCornerShape(28.dp)
-            ) {
-                Text(
-                    text  = "Sair",
-                    style = MaterialTheme.typography.titleLarge
-                )
-            }
-        }
-    }
-}
 
