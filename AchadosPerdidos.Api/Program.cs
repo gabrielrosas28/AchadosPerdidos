@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Permite rodar como Windows Service (sem perder o modo console em desenvolvimento)
+builder.Host.UseWindowsService(opt => opt.ServiceName = "AchadosPerdidosApi");
+
 // --- Banco de Dados ---
 // Por padrão usa SQLite (zero configuração). Para produção, mude
 // "DatabaseProvider" para "SqlServer" no appsettings.json e ajuste a connection string.
