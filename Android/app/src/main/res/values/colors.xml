@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Paleta principal (mesmos valores expostos via Compose em ui/theme/Color.kt) -->
+    <color name="azul_celeste_claro">#FFB3E5FC</color>
+    <color name="azul_celeste">#FF4FC3F7</color>
+    <color name="azul_celeste_escuro">#FF0288D1</color>
+    <color name="branco">#FFFFFFFF</color>
+    <color name="vermelho_alerta">#FFE53935</color>
+</resources>

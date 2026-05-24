@@ -1,4 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Achados e Perdidos</string>
+
+    <!-- Tela pública -->
+    <string name="titulo_grade">O QUE VOCÊ PERDEU?</string>
+    <string name="texto_voltar">&lt; Voltar</string>
+    <string name="botao_esse_item_e_seu">ESSE ITEM É SEU?</string>
+    <string name="dialogo_retirar_titulo">Que ótimo!</string>
+    <string name="dialogo_retirar_texto">Dirija-se à diretoria para retirar o item.</string>
+    <string name="dialogo_ok">Entendi</string>
+    <string name="sem_itens">Nenhum item nesta categoria.</string>
+    <string name="sem_foto">Sem foto</string>
+
+    <!-- Modal de PIN -->
+    <string name="pin_titulo_gestor">Acesso do Gestor</string>
+    <string name="pin_titulo_quiosque">Sair do Quiosque</string>
+    <string name="pin_label">Senha</string>
+    <string name="pin_confirmar">Entrar</string>
+    <string name="pin_cancelar">Cancelar</string>
+    <string name="pin_incorreto">PIN incorreto</string>
+    <string name="pin_acesso_concedido">Modo gestor ativado</string>
+
+    <!-- Acessibilidade -->
+    <string name="cd_mascote">Mascote do Colégio Santa Chiara</string>
+    <string name="cd_menu_gestor">Menu do gestor</string>
 </resources>

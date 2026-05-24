@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.AchadosPerdidos" parent="Theme.AppCompat.DayNight.NoActionBar" />
+    <!--
+        Theme usado pela MainActivity (ComponentActivity). Compose define toda a
+        aparência interna; o XML controla apenas a janela (background do splash
+        e cor da status bar).
+    -->
+    <style name="Theme.AchadosPerdidos" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/azul_celeste_claro</item>
+        <item name="android:statusBarColor">@color/azul_celeste_escuro</item>
+        <item name="android:navigationBarColor">@color/azul_celeste_escuro</item>
+    </style>
 </resources>

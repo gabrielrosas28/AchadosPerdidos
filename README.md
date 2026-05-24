@@ -26,7 +26,7 @@ Cada subpasta tem seu próprio README com instruções de build e execução.
 - ✅ **Passo 2** — Models + Room Database (entidades, DAOs, seed local)
 - ✅ **Passo 3** — Retrofit + WorkManager (sync offline-first, limpeza automática de fotos, FileProvider, permissões)
 - ✅ **Passo 4** — AuthViewModel (PIN `chiara123` + estados de autenticação) e AchadosViewModel (lista reativa de itens/categorias, busca, filtros, CRUD, sync manual)
-- ⬜ Passo 5 — UI do Modo Público (Compose, grades, mascote com long click)
+- ✅ **Passo 5** — UI do Modo Público em Jetpack Compose: tema azul celeste, grade de categorias com emojis, grade de itens, detalhe em tela cheia, modal de PIN e mascote com long-press de 3s
 - ⬜ Passo 6 — UI do Modo Gestor (painel, cadastro com câmera, gestão de categorias)
 
 ## Regras de negócio principais
