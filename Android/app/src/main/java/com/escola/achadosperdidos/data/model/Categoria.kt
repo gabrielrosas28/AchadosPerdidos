@@ -19,6 +19,12 @@ data class Categoria(
 
     val nome: String,
 
+    /**
+     * Emoji escolhido pelo gestor. Quando `null`, a UI cai no helper
+     * `emojiParaCategoria(nome)` que sugere um emoji pelo nome conhecido.
+     */
+    val emoji: String? = null,
+
     val ativa: Boolean = true,
 
     val dataCriacao: Date = Date(),

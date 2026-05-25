@@ -88,7 +88,7 @@ private fun CardCategoria(cat: Categoria, onClick: () -> Unit) {
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = emojiParaCategoria(cat.nome),
+                text = emojiDe(cat),
                 style = TextStyle(fontSize = 80.sp)
             )
             Spacer(Modifier.height(12.dp))

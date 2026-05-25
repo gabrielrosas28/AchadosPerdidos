@@ -43,6 +43,12 @@ interface CategoriaDao {
     @Query("UPDATE categorias SET ativa = 0 WHERE id = :id")
     suspend fun desativar(id: Long)
 
+    @Query("UPDATE categorias SET ativa = 1 WHERE id = :id")
+    suspend fun reativar(id: Long)
+
+    @Query("UPDATE categorias SET nome = :nome, emoji = :emoji WHERE id = :id")
+    suspend fun editar(id: Long, nome: String, emoji: String?)
+
     @Query("UPDATE categorias SET idServidor = :idServidor WHERE id = :id")
     suspend fun marcarSincronizada(id: Long, idServidor: Int)
 

@@ -194,11 +194,25 @@ class AchadosViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /** Cria uma nova categoria; ignora silenciosamente se o nome já existe. */
-    fun adicionarCategoria(nome: String) {
+    fun adicionarCategoria(nome: String, emoji: String? = null) {
         val n = nome.trim()
         if (n.isEmpty()) return
+        val e = emoji?.trim()?.takeIf { it.isNotEmpty() }
         viewModelScope.launch(Dispatchers.IO) {
-            categoriaDao.inserirSeNaoExiste(Categoria(nome = n))
+            categoriaDao.inserirSeNaoExiste(Categoria(nome = n, emoji = e))
+        }
+    }
+
+    /**
+     * Edita nome e/ou emoji de uma categoria existente.
+     * @param emoji `null` ou em branco → volta a usar o emoji heurístico pelo nome.
+     */
+    fun editarCategoria(categoriaId: Long, novoNome: String, novoEmoji: String?) {
+        val n = novoNome.trim()
+        if (n.isEmpty()) return
+        val e = novoEmoji?.trim()?.takeIf { it.isNotEmpty() }
+        viewModelScope.launch(Dispatchers.IO) {
+            categoriaDao.editar(categoriaId, n, e)
         }
     }
 
@@ -206,6 +220,13 @@ class AchadosViewModel(application: Application) : AndroidViewModel(application)
     fun desativarCategoria(categoriaId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             categoriaDao.desativar(categoriaId)
+        }
+    }
+
+    /** Reativa uma categoria que estava desativada. */
+    fun reativarCategoria(categoriaId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            categoriaDao.reativar(categoriaId)
         }
     }
 
