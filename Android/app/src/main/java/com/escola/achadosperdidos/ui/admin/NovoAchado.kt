@@ -4,11 +4,13 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -101,6 +103,21 @@ fun NovoAchado(
         }
     }
 
+    // ── Launcher do Photo Picker (galeria) ──────────────────────────────────
+    // PickVisualMedia: API moderna, não exige permissão READ_*, mostra só fotos.
+    // Disponível em todas as versões via androidx.activity 1.7+ (backport).
+    val galeriaLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uriOrigem ->
+        if (uriOrigem != null) {
+            // Apaga a foto anterior (se já havia uma escolhida) para não deixar lixo
+            arquivoFoto?.delete()
+            val copia = FotoStorage.copiarDaGaleria(context, uriOrigem)
+            arquivoFoto = copia
+            uriDestino = null
+        }
+    }
+
     fun abrirCamera() {
         val temPermissao = ContextCompat.checkSelfPermission(
             context, Manifest.permission.CAMERA
@@ -172,17 +189,40 @@ fun NovoAchado(
             }
         }
 
-        Button(
-            onClick = { abrirCamera() },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp),
-            shape = RoundedCornerShape(30.dp)
+        // ── Botões: Câmera + Galeria lado a lado ───────────────────────────
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = if (arquivoFoto != null) "🔁 Tirar outra foto" else "📷 Tirar foto",
-                style = MaterialTheme.typography.titleMedium
-            )
+            Button(
+                onClick = { abrirCamera() },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(60.dp),
+                shape = RoundedCornerShape(30.dp)
+            ) {
+                Text(
+                    text = if (arquivoFoto != null) "🔁 Câmera" else "📷 Câmera",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            OutlinedButton(
+                onClick = {
+                    galeriaLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .height(60.dp),
+                shape = RoundedCornerShape(30.dp)
+            ) {
+                Text(
+                    text = "🖼️ Galeria",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
         }
 
         // ── Campos ──────────────────────────────────────────────────────────
