@@ -15,6 +15,9 @@
         android:maxSdkVersion="28"
         tools:ignore="ScopedStorage" />
 
+    <!-- Boot: abrir o app automaticamente assim que o tablet ligar -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <application
         android:name=".AchadosPerdidosApp"
         android:label="@string/app_name"
@@ -30,12 +33,62 @@
             android:name=".MainActivity"
             android:exported="true"
             android:screenOrientation="portrait"
-            android:immersive="true">
+            android:immersive="true"
+            android:launchMode="singleInstance"
+            android:lockTaskMode="if_whitelisted"
+            android:resumeWhilePausing="true"
+            android:stateNotNeeded="true">
+
+            <!-- Launcher padrão (aparece na lista de apps) -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!--
+                HOME launcher: quando o app for Device Owner, o MainActivity
+                chama addPersistentPreferredActivity para esta categoria,
+                fazendo o tablet abrir o app sozinho ao apertar Home / no boot.
+            -->
+            <intent-filter android:priority="1">
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
+
+        <!--
+            Device Admin / Device Owner.
+            O permission BIND_DEVICE_ADMIN garante que só o sistema invoque o receiver.
+            android:exported=true é obrigatório para o sistema enxergá-lo.
+        -->
+        <receiver
+            android:name=".AdminReceiver"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+                <action android:name="android.app.action.LOCK_TASK_ENTERING" />
+                <action android:name="android.app.action.LOCK_TASK_EXITING" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Auto-start no boot (e LOCKED_BOOT_COMPLETED em devices com criptografia de arquivo) -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true"
+            android:directBootAware="false"
+            android:enabled="true">
+            <intent-filter android:priority="1000">
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
 
         <!--
             FileProvider: necessário para compartilhar o Uri da foto com o intent da câmera
