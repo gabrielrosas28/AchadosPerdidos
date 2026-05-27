@@ -56,6 +56,10 @@ interface ItemDao {
     @Query("SELECT * FROM itens WHERE sincronizado = 0")
     suspend fun obterNaoSincronizados(): List<Item>
 
+    /** Snapshot único de todos os itens — usado pelo export de backup. */
+    @Query("SELECT * FROM itens ORDER BY dataCadastro DESC")
+    suspend fun obterTodos(): List<Item>
+
     /**
      * Critério de limpeza de fotos (consumido pelo WorkManager no Passo 3):
      *  - Item devolvido (status = 'Devolvido'); OU

@@ -47,6 +47,7 @@ private sealed interface RotaAdmin {
     data object NovaCategoria : RotaAdmin
     data object EntregarItem : RotaAdmin
     data object Historico : RotaAdmin
+    data object ExportarBackup : RotaAdmin
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -106,10 +107,11 @@ fun PainelGestor(
         Box(Modifier.weight(1f).fillMaxWidth()) {
             when (rota) {
                 RotaAdmin.Menu -> MenuGestor(
-                    onNovoAchado    = { rota = RotaAdmin.NovoAchado },
-                    onNovaCategoria = { rota = RotaAdmin.NovaCategoria },
-                    onEntregarItem  = { rota = RotaAdmin.EntregarItem },
-                    onHistorico     = { rota = RotaAdmin.Historico }
+                    onNovoAchado     = { rota = RotaAdmin.NovoAchado },
+                    onNovaCategoria  = { rota = RotaAdmin.NovaCategoria },
+                    onEntregarItem   = { rota = RotaAdmin.EntregarItem },
+                    onHistorico      = { rota = RotaAdmin.Historico },
+                    onExportarBackup = { rota = RotaAdmin.ExportarBackup }
                 )
                 RotaAdmin.NovoAchado -> NovoAchado(
                     achadosVM    = achadosVM,
@@ -123,17 +125,19 @@ fun PainelGestor(
                 )
                 RotaAdmin.EntregarItem -> EntregarItem(achadosVM = achadosVM)
                 RotaAdmin.Historico    -> Historico(achadosVM = achadosVM)
+                RotaAdmin.ExportarBackup -> ExportarBackup()
             }
         }
     }
 }
 
 private fun quandoSubtela(r: RotaAdmin): String? = when (r) {
-    RotaAdmin.Menu          -> null
-    RotaAdmin.NovoAchado    -> "Novo Achado"
-    RotaAdmin.NovaCategoria -> "Nova Categoria"
-    RotaAdmin.EntregarItem  -> "Entregar Item"
-    RotaAdmin.Historico     -> "Histórico"
+    RotaAdmin.Menu           -> null
+    RotaAdmin.NovoAchado     -> "Novo Achado"
+    RotaAdmin.NovaCategoria  -> "Nova Categoria"
+    RotaAdmin.EntregarItem   -> "Entregar Item"
+    RotaAdmin.Historico      -> "Histórico"
+    RotaAdmin.ExportarBackup -> "Exportar Backup"
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -202,13 +206,14 @@ private fun MenuGestor(
     onNovoAchado: () -> Unit,
     onNovaCategoria: () -> Unit,
     onEntregarItem: () -> Unit,
-    onHistorico: () -> Unit
+    onHistorico: () -> Unit,
+    onExportarBackup: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
+        verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically)
     ) {
         BotaoMenuGestor(
             emoji = "➕",
@@ -233,6 +238,12 @@ private fun MenuGestor(
             titulo = "Histórico",
             subtitulo = "Ver tudo que já foi devolvido",
             onClick = onHistorico
+        )
+        BotaoMenuGestor(
+            emoji = "💾",
+            titulo = "Exportar Backup",
+            subtitulo = "Salva tudo num ZIP (dados + fotos)",
+            onClick = onExportarBackup
         )
     }
 }

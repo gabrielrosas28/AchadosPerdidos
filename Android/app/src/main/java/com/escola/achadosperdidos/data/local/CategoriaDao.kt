@@ -31,6 +31,10 @@ interface CategoriaDao {
     @Query("SELECT * FROM categorias WHERE idServidor IS NULL")
     suspend fun obterNaoSincronizadas(): List<Categoria>
 
+    /** Snapshot único de todas as categorias — usado pelo export de backup. */
+    @Query("SELECT * FROM categorias ORDER BY nome")
+    suspend fun obterTodas(): List<Categoria>
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun inserir(c: Categoria): Long
 
