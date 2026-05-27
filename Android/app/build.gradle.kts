@@ -13,8 +13,13 @@ android {
         applicationId = "com.escola.achadosperdidos"
         minSdk        = 24
         targetSdk     = 35
-        versionCode   = 1
-        versionName   = "1.0.0"
+        // Versionamento SemVer (MAJOR.MINOR.PATCH).
+        // - MAJOR: mudança incompatível de dados ou de fluxo do gestor.
+        // - MINOR: nova feature (export de backup, nova tela admin, etc.).
+        // - PATCH: correção de bug, ajuste cosmético.
+        // versionCode é monotônico (incrementa 1 a cada build publicado).
+        versionCode   = 2
+        versionName   = "1.1.0"
 
         // Exporta o schema do Room para versionamento das migrations
         ksp {
