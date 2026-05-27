@@ -18,12 +18,11 @@ import java.util.concurrent.TimeUnit
 object ApiClient {
 
     /**
-     * URL do servidor Windows da escola (IP fixo na rede interna).
-     *
-     * Para **testes no emulador** (desenvolvimento), troque temporariamente
-     * para `http://10.0.2.2:5080/` (mapeia para o `localhost:5080` do PC host).
+     * Fallback usado apenas quando [configurar] é chamado com `baseUrl` em branco.
+     * Em produção, a URL real vem de `BuildConfig.ACHADOS_BASE_URL` (lido de
+     * `local.properties` no build) e este valor nunca é consultado.
      */
-    const val BASE_URL_PADRAO = "http://192.168.15.61:5080/"
+    const val BASE_URL_PADRAO = "http://localhost:5080/"
 
     @Volatile private var instancia: ApiService? = null
     @Volatile private var configAtual: Config = Config(BASE_URL_PADRAO, "")

@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.Card
@@ -48,6 +50,7 @@ private sealed interface RotaAdmin {
     data object EntregarItem : RotaAdmin
     data object Historico : RotaAdmin
     data object ExportarBackup : RotaAdmin
+    data object Sincronizar : RotaAdmin
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -111,7 +114,8 @@ fun PainelGestor(
                     onNovaCategoria  = { rota = RotaAdmin.NovaCategoria },
                     onEntregarItem   = { rota = RotaAdmin.EntregarItem },
                     onHistorico      = { rota = RotaAdmin.Historico },
-                    onExportarBackup = { rota = RotaAdmin.ExportarBackup }
+                    onExportarBackup = { rota = RotaAdmin.ExportarBackup },
+                    onSincronizar    = { rota = RotaAdmin.Sincronizar }
                 )
                 RotaAdmin.NovoAchado -> NovoAchado(
                     achadosVM    = achadosVM,
@@ -126,6 +130,7 @@ fun PainelGestor(
                 RotaAdmin.EntregarItem -> EntregarItem(achadosVM = achadosVM)
                 RotaAdmin.Historico    -> Historico(achadosVM = achadosVM)
                 RotaAdmin.ExportarBackup -> ExportarBackup()
+                RotaAdmin.Sincronizar    -> SincronizarAgora(achadosVM = achadosVM)
             }
         }
     }
@@ -138,6 +143,7 @@ private fun quandoSubtela(r: RotaAdmin): String? = when (r) {
     RotaAdmin.EntregarItem   -> "Entregar Item"
     RotaAdmin.Historico      -> "Histórico"
     RotaAdmin.ExportarBackup -> "Exportar Backup"
+    RotaAdmin.Sincronizar    -> "Sincronizar"
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -207,13 +213,15 @@ private fun MenuGestor(
     onNovaCategoria: () -> Unit,
     onEntregarItem: () -> Unit,
     onHistorico: () -> Unit,
-    onExportarBackup: () -> Unit
+    onExportarBackup: () -> Unit,
+    onSincronizar: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically)
+            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         BotaoMenuGestor(
             emoji = "➕",
@@ -238,6 +246,12 @@ private fun MenuGestor(
             titulo = "Histórico",
             subtitulo = "Ver tudo que já foi devolvido",
             onClick = onHistorico
+        )
+        BotaoMenuGestor(
+            emoji = "🔄",
+            titulo = "Sincronizar",
+            subtitulo = "Envia tudo para o servidor",
+            onClick = onSincronizar
         )
         BotaoMenuGestor(
             emoji = "💾",

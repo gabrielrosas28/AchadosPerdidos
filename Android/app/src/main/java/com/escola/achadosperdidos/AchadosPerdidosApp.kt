@@ -35,14 +35,12 @@ class AchadosPerdidosApp : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        // Configura o cliente HTTP da API. Em produção, esses valores devem ser lidos
-        // das SharedPreferences (configuráveis pelo gestor nas telas admin do Passo 6).
-        // - BASE_URL_PADRAO = http://10.0.2.2:5080/ (emulador → localhost do PC)
-        // - Troque para o IP real do servidor da escola antes de instalar no tablet.
-        // - X-Api-Key precisa bater com a chave do appsettings.json do servidor.
+        // BuildConfig.ACHADOS_BASE_URL / ACHADOS_API_KEY sao injetados pelo
+        // build.gradle.kts a partir de local.properties (nao versionado).
+        // Trocar de rede = editar local.properties + recompilar.
         ApiClient.configurar(
-            baseUrl = ApiClient.BASE_URL_PADRAO,
-            apiKey  = ""    // setar a API Key real quando estiver disponível
+            baseUrl = BuildConfig.ACHADOS_BASE_URL,
+            apiKey  = BuildConfig.ACHADOS_API_KEY
         )
 
         // Agenda o worker de limpeza de fotos + sync para rodar 1× por dia.
