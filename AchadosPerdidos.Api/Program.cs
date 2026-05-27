@@ -1,5 +1,6 @@
 using AchadosPerdidos.Api.Data;
 using AchadosPerdidos.Api.Services;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,20 @@ builder.Host.UseWindowsService(opt => opt.ServiceName = "AchadosPerdidosApi");
 var provider = builder.Configuration["DatabaseProvider"] ?? "Sqlite";
 var connectionString = builder.Configuration.GetConnectionString("Default")
     ?? throw new InvalidOperationException("ConnectionStrings:Default não configurada.");
+
+// Quando rodando como Windows Service, o CWD do processo e' C:\Windows\System32.
+// Se "Data Source" for caminho relativo, o SQLite criaria o banco la — o que e'
+// confuso pra backup/admin. Ancora em AppContext.BaseDirectory (pasta do .exe)
+// pra deixar o banco junto da instalacao (ex.: C:\AchadosPerdidos\).
+if (string.Equals(provider, "Sqlite", StringComparison.OrdinalIgnoreCase))
+{
+    var b = new SqliteConnectionStringBuilder(connectionString);
+    if (!string.IsNullOrEmpty(b.DataSource) && !Path.IsPathRooted(b.DataSource))
+    {
+        b.DataSource = Path.Combine(AppContext.BaseDirectory, b.DataSource);
+        connectionString = b.ConnectionString;
+    }
+}
 
 builder.Services.AddDbContext<AchadosPerdidosContext>(opt =>
 {
