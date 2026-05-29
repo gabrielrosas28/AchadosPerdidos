@@ -53,6 +53,14 @@ interface ItemDao {
     @Query("SELECT * FROM itens WHERE id = :id")
     suspend fun obterPorId(id: Long): Item?
 
+    /** Busca pelo UUID estável do tablet (idempotência ao baixar itens do servidor). */
+    @Query("SELECT * FROM itens WHERE idLocalTablet = :uuid LIMIT 1")
+    suspend fun obterPorIdLocalTablet(uuid: String): Item?
+
+    /** Busca pelo ID atribuído pelo servidor (idempotência ao baixar itens criados no site). */
+    @Query("SELECT * FROM itens WHERE idServidor = :idServidor LIMIT 1")
+    suspend fun obterPorIdServidor(idServidor: Int): Item?
+
     @Query("SELECT * FROM itens WHERE sincronizado = 0")
     suspend fun obterNaoSincronizados(): List<Item>
 

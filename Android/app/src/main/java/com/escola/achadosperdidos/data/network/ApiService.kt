@@ -3,6 +3,7 @@ package com.escola.achadosperdidos.data.network
 import com.escola.achadosperdidos.data.network.dto.*
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -30,6 +31,17 @@ interface ApiService {
      */
     @GET("api/sync/categorias")
     suspend fun baixarCategorias(@Query("desde") desde: String? = null): List<CategoriaDto>
+
+    /**
+     * Baixa um arquivo (foto de item) a partir de uma URL **absoluta** — a
+     * `urlFoto` que o servidor devolve em [dto.ItemDto] (ex:
+     * `http://192.168.15.61:5080/fotos/abc.jpg`). `@Url` faz o Retrofit usar a
+     * URL inteira, ignorando a baseUrl. `@Streaming` evita carregar tudo em
+     * memória de uma vez.
+     */
+    @Streaming
+    @GET
+    suspend fun baixarArquivo(@Url url: String): ResponseBody
 
     // ── Categorias ────────────────────────────────────────────────────────────
 

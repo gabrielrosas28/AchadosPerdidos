@@ -103,7 +103,7 @@ class LimpezaFotoWorker(
         // ── 2. Sincronização com o servidor (best-effort) ─────────────────────
         try {
             // Usa o singleton (já configurado em AchadosPerdidosApp.onCreate).
-            val sync = SyncRepository(ApiClient.obter(), catDao, itemDao)
+            val sync = SyncRepository(ApiClient.obter(), catDao, itemDao, applicationContext)
             sync.sincronizarTudo()
             Log.i(TAG, "Sincronização com servidor concluída.")
         } catch (e: Exception) {

@@ -67,4 +67,23 @@ object FotoStorage {
             null
         }
     }
+
+    /**
+     * Grava os bytes de uma foto baixada do servidor na pasta gerenciada do app.
+     * Usado pelo download de itens (servidor → tablet) em
+     * [com.escola.achadosperdidos.data.network.SyncRepository.baixarItens].
+     *
+     * Retorna o [File] gravado, ou `null` se a escrita falhar (o arquivo
+     * parcial é apagado nesse caso).
+     */
+    fun salvarBytes(context: Context, bytes: ByteArray): File? {
+        val destino = File(pasta(context), "${UUID.randomUUID()}.jpg")
+        return runCatching {
+            destino.outputStream().use { it.write(bytes) }
+            destino
+        }.getOrElse {
+            destino.delete()
+            null
+        }
+    }
 }

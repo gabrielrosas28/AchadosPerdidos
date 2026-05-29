@@ -241,7 +241,7 @@ class AchadosViewModel(application: Application) : AndroidViewModel(application)
     fun sincronizarAgora(onConcluido: (sucesso: Boolean) -> Unit = {}) {
         viewModelScope.launch(Dispatchers.IO) {
             val sucesso = runCatching {
-                val sync = SyncRepository(ApiClient.obter(), categoriaDao, itemDao)
+                val sync = SyncRepository(ApiClient.obter(), categoriaDao, itemDao, getApplication())
                 sync.sincronizarTudo()
             }.isSuccess
             onConcluido(sucesso)
