@@ -4,11 +4,6 @@ import androidx.room.TypeConverter
 import com.escola.achadosperdidos.data.model.StatusItem
 import java.util.Date
 
-/**
- * Conversores de tipos não primitivos para colunas SQLite:
- *  - Date  <-> Long (timestamp em ms, UTC)
- *  - StatusItem <-> String (nome do enum, mais legível em queries do que ordinal)
- */
 class Converters {
 
     @TypeConverter

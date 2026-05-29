@@ -26,16 +26,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.escola.achadosperdidos.R
 
-/**
- * Diálogo de digitação do PIN do gestor.
- *
- * Usado em dois contextos (controlados pela [AuthViewModel]):
- *  1. Acesso ao Modo Gestor (click no hambúrguer)
- *  2. Saída do quiosque (long-click 3s no mascote)
- *
- * O conteúdo é o mesmo — só o título muda. A validação acontece **fora**
- * deste composable (no `onConfirmar`).
- */
 @Composable
 fun ModalPin(
     titulo: String,
@@ -45,7 +35,6 @@ fun ModalPin(
     var pin by remember { mutableStateOf("") }
     val focus = remember { FocusRequester() }
 
-    // Foca automaticamente o campo ao abrir
     LaunchedEffect(Unit) { focus.requestFocus() }
 
     AlertDialog(

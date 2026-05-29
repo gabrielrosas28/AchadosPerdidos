@@ -1,21 +1,11 @@
-// ═══════════════════════════════════════════════════════════════════════════
-//  Painel do Gestor — Achados e Perdidos
-//  Vanilla JS — consome a mesma API REST que o tablet (/api/...)
-// ═══════════════════════════════════════════════════════════════════════════
+const API_BASE = '';
 
-// ── Configuração ───────────────────────────────────────────────────────────
-const API_BASE = ''; // mesma origem — servido pelo backend .NET
-
-// ── Estado em memória ──────────────────────────────────────────────────────
 let apiKey = sessionStorage.getItem('ap-api-key') || '';
 let categorias = [];
 let itensAtivos = [];
 let itensDevolvidos = [];
 let idParaEntregar = null;
 
-// ── Helpers ────────────────────────────────────────────────────────────────
-
-/** Fetch wrapper que injeta a API key e trata 401. */
 async function api(path, options = {}) {
     const headers = options.headers ? { ...options.headers } : {};
     if (apiKey) headers['X-Api-Key'] = apiKey;
@@ -45,7 +35,6 @@ function toast(msg, tipo = '') {
     toast._timer = setTimeout(() => t.className = 'toast', 3500);
 }
 
-// Emojis sugeridos no picker (em ordem)
 const EMOJIS_SUGERIDOS = [
     '📘', '📚', '✏️', '📔',
     '🎒', '🍱', '🥤', '🍎',
@@ -56,12 +45,6 @@ const EMOJIS_SUGERIDOS = [
     '🥽', '🎧', '☂️', '📦'
 ];
 
-/**
- * Retorna o emoji da categoria:
- *   1. usa o emoji explicitamente setado no servidor (cat.emoji), se houver
- *   2. fallback heurístico baseado no nome
- *   3. caixa genérica
- */
 function emojiDaCategoria(cat) {
     if (cat && cat.emoji && cat.emoji.trim()) return cat.emoji.trim();
     return emojiParaNome(cat ? cat.nome : '');
@@ -80,10 +63,6 @@ function emojiParaNome(nome) {
     return '📦';
 }
 
-/**
- * Emoji para exibir num item da grade: procura a categoria correspondente
- * no array local e usa o emoji explícito; senão cai no fallback por nome.
- */
 function emojiDoItem(item) {
     const cat = categorias.find(c => c.id === item.categoriaId);
     return emojiDaCategoria(cat || { nome: item.categoriaNome });
@@ -110,8 +89,6 @@ function setStatusConexao(estado) {
     else                          { el.className = 'status carregando'; el.textContent = 'Carregando…'; }
 }
 
-// ── Login (API key) ─────────────────────────────────────────────────────────
-
 function mostrarLogin(msgErro = '') {
     document.getElementById('erro-login').textContent = msgErro;
     const modal = document.getElementById('modal-login');
@@ -126,19 +103,16 @@ document.getElementById('btn-entrar').addEventListener('click', async () => {
     sessionStorage.setItem('ap-api-key', apiKey);
 
     try {
-        // valida com uma chamada simples
         await api('/api/categorias');
         document.getElementById('modal-login').hidden = true;
         document.getElementById('input-api-key').value = '';
         atualizarTudo();
-    } catch (_) { /* o api() já trata o 401 */ }
+    } catch (_) { }
 });
 
 document.getElementById('input-api-key').addEventListener('keydown', e => {
     if (e.key === 'Enter') document.getElementById('btn-entrar').click();
 });
-
-// ── Sair ───────────────────────────────────────────────────────────────────
 
 document.getElementById('btn-sair').addEventListener('click', () => {
     sessionStorage.removeItem('ap-api-key');
@@ -150,8 +124,6 @@ document.getElementById('btn-sair').addEventListener('click', () => {
     mostrarLogin();
 });
 
-// ── Tabs ───────────────────────────────────────────────────────────────────
-
 document.querySelectorAll('.tab').forEach(btn => {
     btn.addEventListener('click', () => {
         const tab = btn.dataset.tab;
@@ -161,17 +133,13 @@ document.querySelectorAll('.tab').forEach(btn => {
     });
 });
 
-// ── Carregar dados ─────────────────────────────────────────────────────────
-
 async function carregarCategorias() {
-    // ?somenteAtivas=false para o gestor ver todas (inclui desativadas)
     categorias = await api('/api/categorias?somenteAtivas=false');
     renderCategorias();
     atualizarSelectCategoria();
 }
 
 async function carregarItensAtivos() {
-    // Status no servidor: 0=Encontrado, 1=Devolvido, 2=Expirado
     itensAtivos = await api('/api/itens?status=0');
     renderItens();
 }
@@ -192,8 +160,6 @@ async function atualizarTudo() {
     }
 }
 
-// ── Render ─────────────────────────────────────────────────────────────────
-
 function renderCategorias() {
     const c = document.getElementById('lista-categorias');
     if (!categorias.length) {
@@ -211,10 +177,8 @@ function renderCategorias() {
         </div>
     `).join('');
 
-    // Click no card -> editar; click no botão remover -> confirmar remoção
     c.querySelectorAll('.card-categoria').forEach(card => {
         card.addEventListener('click', e => {
-            // Se clicou no botão remover, deixa o handler dele tratar
             if (e.target.closest('.btn-remover')) return;
             const id = Number(card.dataset.id);
             const cat = categorias.find(c2 => c2.id === id);
@@ -297,11 +261,7 @@ function atualizarSelectCategoria() {
         .join('');
 }
 
-// ── Filtro de busca ────────────────────────────────────────────────────────
-
 document.getElementById('busca-itens').addEventListener('input', renderItens);
-
-// ── Novo Item (com foto) ───────────────────────────────────────────────────
 
 document.getElementById('btn-novo-item').addEventListener('click', () => {
     document.getElementById('form-novo-item').reset();
@@ -350,9 +310,6 @@ document.getElementById('form-novo-item').addEventListener('submit', async e => 
     }
 });
 
-// ── Categoria: criar / editar (modal unificado) ────────────────────────────
-
-// Preenche o grid de sugestões de emoji uma única vez
 (function popularEmojiSugestoes() {
     const grid = document.getElementById('emoji-sugestoes');
     grid.innerHTML = EMOJIS_SUGERIDOS.map(e =>
@@ -372,12 +329,10 @@ function marcarEmojiSelecionado(emoji) {
     });
 }
 
-// Sincroniza o destaque no picker quando o usuário digita/cola
 document.getElementById('categoria-emoji').addEventListener('input', e => {
     marcarEmojiSelecionado(e.target.value.trim());
 });
 
-/** Abre o modal em modo "criar" (cat = null) ou "editar" (cat = objeto). */
 function abrirModalCategoria(cat) {
     const editando = !!cat;
     document.getElementById('categoria-id').value = editando ? cat.id : '';
@@ -410,7 +365,6 @@ document.getElementById('form-categoria').addEventListener('submit', async e => 
     btn.disabled = true;
     try {
         if (id) {
-            // Editar (PUT)
             await api(`/api/categorias/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -418,7 +372,6 @@ document.getElementById('form-categoria').addEventListener('submit', async e => 
             });
             toast('Categoria atualizada!', 'sucesso');
         } else {
-            // Criar (POST)
             await api('/api/categorias', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -434,8 +387,6 @@ document.getElementById('form-categoria').addEventListener('submit', async e => 
         btn.disabled = false;
     }
 });
-
-// ── Remover categoria (soft-delete) ────────────────────────────────────────
 
 let idCategoriaParaRemover = null;
 
@@ -462,8 +413,6 @@ document.getElementById('confirmar-remover-categoria').addEventListener('click',
     }
 });
 
-// ── Entregar item (PATCH /status) ──────────────────────────────────────────
-
 function abrirConfirmacaoEntrega(id, descricao) {
     idParaEntregar = id;
     document.getElementById('entregar-descricao').textContent = `"${descricao}"`;
@@ -478,7 +427,7 @@ document.getElementById('confirmar-entrega').addEventListener('click', async () 
         await api(`/api/itens/${idParaEntregar}/status`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: 1 })   // 1 = Devolvido
+            body: JSON.stringify({ status: 1 })
         });
         toast('Item marcado como devolvido!', 'sucesso');
         document.getElementById('modal-entregar').hidden = true;
@@ -491,15 +440,11 @@ document.getElementById('confirmar-entrega').addEventListener('click', async () 
     }
 });
 
-// ── Fechar modais (botões com data-fechar) ─────────────────────────────────
-
 document.querySelectorAll('[data-fechar]').forEach(el => {
     el.addEventListener('click', () => {
         document.getElementById(el.dataset.fechar).hidden = true;
     });
 });
-
-// ── Fechar modal clicando no fundo escuro ──────────────────────────────────
 
 document.querySelectorAll('.modal').forEach(m => {
     m.addEventListener('click', e => {
@@ -507,15 +452,12 @@ document.querySelectorAll('.modal').forEach(m => {
     });
 });
 
-// ── Bootstrap ──────────────────────────────────────────────────────────────
-
 if (!apiKey) {
     mostrarLogin();
 } else {
     atualizarTudo();
 }
 
-// Atualização periódica (cada 30s) para refletir mudanças do tablet
 setInterval(() => {
     if (apiKey && document.visibilityState === 'visible') {
         atualizarTudo();

@@ -35,13 +35,6 @@ import coil.compose.AsyncImage
 import com.escola.achadosperdidos.R
 import com.escola.achadosperdidos.data.local.ItemComCategoria
 
-/**
- * Tela cheia mostrando a foto e a descrição de um item.
- *
- * Toda a interação que importa neste passo é o botão **"ESSE ITEM É SEU?"**
- * que abre um pop-up orientando o usuário a procurar a diretoria. A baixa
- * do item (status → Devolvido) acontece somente no Modo Gestor (Passo 6).
- */
 @Composable
 fun DetalheItem(
     item: ItemComCategoria,
@@ -55,7 +48,6 @@ fun DetalheItem(
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // ── Foto (ou placeholder) ──────────────────────────────────────────
         Card(
             modifier = Modifier
                 .weight(1f)
@@ -95,7 +87,6 @@ fun DetalheItem(
 
         Spacer(Modifier.height(20.dp))
 
-        // ── Descrição ──────────────────────────────────────────────────────
         Text(
             text = item.item.descricao,
             style = MaterialTheme.typography.headlineMedium,
@@ -117,7 +108,6 @@ fun DetalheItem(
 
         Spacer(Modifier.height(24.dp))
 
-        // ── Botão de ação ──────────────────────────────────────────────────
         Button(
             onClick = { mostrarPopup = true },
             modifier = Modifier
@@ -137,7 +127,6 @@ fun DetalheItem(
         }
     }
 
-    // ── Popup "Dirija-se à diretoria" ──────────────────────────────────────
     if (mostrarPopup) {
         AlertDialog(
             onDismissRequest = { mostrarPopup = false },

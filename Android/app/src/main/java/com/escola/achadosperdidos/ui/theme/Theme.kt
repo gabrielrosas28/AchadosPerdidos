@@ -4,10 +4,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 
-/**
- * Esquema único (claro). O app é exposto em horário comercial num tablet de
- * escola — não faz sentido seguir o dark mode do sistema.
- */
 private val EsquemaCelesteClaro = lightColorScheme(
     primary             = AzulCelesteEscuro,
     onPrimary           = Branco,

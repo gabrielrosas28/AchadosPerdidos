@@ -37,14 +37,6 @@ import com.escola.achadosperdidos.AchadosPerdidosApp
 import com.escola.achadosperdidos.data.backup.BackupExporter
 import kotlinx.coroutines.launch
 
-/**
- * Tela "Exportar backup" do Painel do Gestor.
- *
- * Fluxo: usuário toca em "Gerar backup" → SAF abre seletor de pasta com nome
- * já sugerido (`achadosperdidos-backup-AAAAMMDD-HHmm.zip`) → escreve um ZIP
- * contendo `dados.json` + `fotos/`. Em seguida oferece compartilhar via Intent
- * (Drive, Email, USB) para tirar o arquivo do tablet.
- */
 @Composable
 fun ExportarBackup() {
     val context = LocalContext.current
@@ -57,7 +49,6 @@ fun ExportarBackup() {
         ActivityResultContracts.CreateDocument("application/zip")
     ) { uri: Uri? ->
         if (uri == null) {
-            // Usuário cancelou — volta ao estado ocioso silenciosamente.
             estado = EstadoExport.Ocioso
             return@rememberLauncherForActivityResult
         }

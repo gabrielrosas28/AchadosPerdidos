@@ -60,28 +60,12 @@ import com.escola.achadosperdidos.viewmodel.AuthViewModel
 import com.escola.achadosperdidos.viewmodel.EstadoAuth
 import com.escola.achadosperdidos.viewmodel.EventoAuth
 
-// ════════════════════════════════════════════════════════════════════════════
-//  Rotas internas do Modo Público (sem nav-compose — pilha simples)
-// ════════════════════════════════════════════════════════════════════════════
-
 private sealed interface RotaPublica {
     data object Categorias : RotaPublica
     data class Itens(val catId: Long, val catNome: String) : RotaPublica
     data class Detalhe(val item: ItemComCategoria) : RotaPublica
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-//  Root da aplicação
-// ════════════════════════════════════════════════════════════════════════════
-
-/**
- * Composição raiz da aplicação.
- *
- * Decide o que mostrar baseado em [AuthViewModel.estado]:
- *  - **Público / Aguardando PIN** → [TelaPublicaRaiz] (com modal sobreposto)
- *  - **Modo Gestor**              → placeholder do Painel (UI real no Passo 6)
- *  - **Quiosque liberado**        → chama [onSairQuiosque]
- */
 @Composable
 fun AppPublica(
     onSairQuiosque: () -> Unit,
@@ -91,17 +75,11 @@ fun AppPublica(
     val estado by authVM.estado.collectAsState()
     val snackbar = remember { SnackbarHostState() }
 
-    // ── Bloqueio do botão Back no nível raiz ──────────────────────────────
-    // BackHandlers internos (TelaPublicaRaiz, PainelGestor) cuidam da navegação
-    // interna; este aqui engole qualquer back que sobrar para impedir que o
-    // sistema feche o app sem PIN. A única saída legítima é long-press no
-    // mascote + PIN (que dispara stopLockTask + finishAffinity em MainActivity).
-    BackHandler(enabled = true) { /* swallow */ }
+    BackHandler(enabled = true) { }
 
     val msgPinErrado     = stringResource(R.string.pin_incorreto)
     val msgAcessoGestor  = stringResource(R.string.pin_acesso_concedido)
 
-    // Feedback transitório (PIN errado / acesso concedido)
     LaunchedEffect(Unit) {
         authVM.eventos.collect { ev ->
             when (ev) {
@@ -111,7 +89,6 @@ fun AppPublica(
         }
     }
 
-    // Saída do quiosque — efeito colateral
     LaunchedEffect(estado) {
         if (estado == EstadoAuth.QuiosqueLiberado) {
             onSairQuiosque()
@@ -135,7 +112,6 @@ fun AppPublica(
                         onHamburguer      = authVM::solicitarEntradaGestor,
                         onMascoteLongClick = authVM::solicitarSaidaQuiosque
                     )
-                    // Modal de PIN sobre a tela pública
                     val tituloModal = when (estado) {
                         is EstadoAuth.AguardandoPinGestor          -> stringResource(R.string.pin_titulo_gestor)
                         is EstadoAuth.AguardandoPinSaidaQuiosque   -> stringResource(R.string.pin_titulo_quiosque)
@@ -154,21 +130,15 @@ fun AppPublica(
     }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-//  Tela pública (navegação interna: grade → itens → detalhe)
-// ════════════════════════════════════════════════════════════════════════════
-
 @Composable
 private fun TelaPublicaRaiz(
     achadosVM: AchadosViewModel,
     onHamburguer: () -> Unit,
     onMascoteLongClick: () -> Unit
 ) {
-    // Pilha de rotas — começa na grade de categorias.
     var pilha by remember { mutableStateOf<List<RotaPublica>>(listOf(RotaPublica.Categorias)) }
     val rotaAtual = pilha.last()
 
-    // Botão "voltar" físico — só ativo se há para onde voltar.
     BackHandler(enabled = pilha.size > 1) {
         pilha = pilha.dropLast(1)
     }
@@ -185,7 +155,6 @@ private fun TelaPublicaRaiz(
         Box(Modifier.weight(1f).fillMaxWidth()) {
             when (val rota = rotaAtual) {
                 RotaPublica.Categorias -> {
-                    // Quando entra na grade principal, limpa o filtro
                     LaunchedEffect(Unit) {
                         achadosVM.selecionarCategoria(null)
                     }
@@ -199,7 +168,6 @@ private fun TelaPublicaRaiz(
                     )
                 }
                 is RotaPublica.Itens -> {
-                    // Reaplica o filtro caso voltemos para essa rota
                     LaunchedEffect(rota.catId) {
                         achadosVM.selecionarCategoria(rota.catId)
                     }
@@ -216,10 +184,6 @@ private fun TelaPublicaRaiz(
         }
     }
 }
-
-// ════════════════════════════════════════════════════════════════════════════
-//  Top bar — mascote (esquerda) + voltar + hambúrguer (direita)
-// ════════════════════════════════════════════════════════════════════════════
 
 @Composable
 private fun TopoPublico(
@@ -278,22 +242,6 @@ private fun TopoPublico(
     }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-//  Mascote com long-press de 3 segundos
-// ════════════════════════════════════════════════════════════════════════════
-
-/**
- * Imagem do mascote que reage a um **long-press de 3 segundos** chamando
- * [onLongClick]. Mostra um anel de progresso enquanto o usuário segura,
- * dando feedback visual de quanto falta.
- *
- * Implementação:
- *  - [pointerInput] + [awaitEachGesture] detecta down/up custom (a primitiva
- *    `detectTapGestures(onLongPress)` usa timeout fixo ~500 ms, curto demais).
- *  - Um [Animatable] anima o progresso linearmente em 3 s.
- *  - Se o usuário soltar antes, a key do `LaunchedEffect` muda e o animateTo
- *    é cancelado — `onLongClick` não dispara.
- */
 @Composable
 private fun Mascote(
     onLongClick: () -> Unit,
@@ -306,12 +254,10 @@ private fun Mascote(
     LaunchedEffect(pressionando) {
         if (pressionando) {
             progresso.snapTo(0f)
-            // Cancelado se pressionando virar false antes de completar.
             progresso.animateTo(
                 targetValue = 1f,
                 animationSpec = tween(durationMillis = duracaoMs, easing = LinearEasing)
             )
-            // Só chega aqui se NÃO foi cancelado → completou 3s pressionando.
             onLongClick()
             pressionando = false
         } else {
@@ -338,7 +284,6 @@ private fun Mascote(
             contentDescription = stringResource(R.string.cd_mascote),
             modifier = Modifier.fillMaxSize().clip(CircleShape)
         )
-        // Anel de progresso (só visível enquanto segura)
         if (pressionando) {
             CircularProgressIndicator(
                 progress    = { progresso.value },

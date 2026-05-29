@@ -15,28 +15,11 @@ import java.util.TimeZone
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
-/**
- * Gera um ZIP de backup completo dos dados locais do tablet:
- *
- *   backup.zip
- *   ├── dados.json    (categorias + itens + metadados)
- *   └── fotos/        (uma entrada por item.caminhoFoto existente em disco)
- *
- * Pensado para rodar 1× antes da primeira sincronização com o servidor — quando
- * o tablet acumulou meses de cadastros locais e queremos preservar tudo num
- * arquivo portátil (Drive, Email, pendrive) antes de integrar.
- */
 object BackupExporter {
 
     private const val VERSAO_FORMATO = 1
     private const val PASTA_FOTOS_NO_ZIP = "fotos"
 
-    /**
-     * Escreve o ZIP de backup direto no [destino] (tipicamente um
-     * `OutputStream` obtido de `contentResolver.openOutputStream(uri)` após
-     * o usuário escolher onde salvar via SAF). Não fecha o destino — quem
-     * abriu deve fechar.
-     */
     suspend fun exportarPara(
         app: AchadosPerdidosApp,
         destino: OutputStream,
@@ -97,10 +80,6 @@ object BackupExporter {
         )
     }
 
-    /**
-     * Nome de arquivo sugerido para o ZIP — passe ao
-     * `CreateDocument("application/zip")` na UI.
-     */
     fun nomeArquivoSugerido(agora: Date = Date()): String {
         val ts = SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(agora)
         return "achadosperdidos-backup-$ts.zip"
@@ -113,11 +92,6 @@ object BackupExporter {
         val fotosAusentes: Int,
     )
 
-    /**
-     * Mapeia itemId → nome único do arquivo dentro de `fotos/` no ZIP, ou
-     * `null` se o item não tem foto ou se o arquivo não existe em disco.
-     * O nome no ZIP preserva o basename original (que já é UUID).
-     */
     private fun construirMapeamentoFotos(itens: List<Item>): Map<Long, String?> {
         val usados = mutableSetOf<String>()
         return itens.associate { item ->
@@ -175,8 +149,6 @@ object BackupExporter {
         fmt.timeZone = TimeZone.getTimeZone("UTC")
         return fmt.format(d)
     }
-
-    // ── DTOs (formato estável do JSON; não usar entidades Room diretamente) ──
 
     private data class PayloadBackup(
         val versao: Int,

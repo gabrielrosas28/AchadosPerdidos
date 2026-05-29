@@ -4,10 +4,8 @@
 
 namespace AchadosPerdidos.Api.Migrations
 {
-    /// <inheritdoc />
     public partial class EmojiCategoria : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
@@ -53,7 +51,6 @@ namespace AchadosPerdidos.Api.Migrations
                 value: "🎀");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(

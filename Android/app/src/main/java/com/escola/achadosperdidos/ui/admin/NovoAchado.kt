@@ -53,16 +53,6 @@ import com.escola.achadosperdidos.data.model.Categoria
 import com.escola.achadosperdidos.viewmodel.AchadosViewModel
 import java.io.File
 
-/**
- * Tela do gestor para cadastrar um novo item achado.
- *
- * Fluxo:
- *  1. Botão "Tirar Foto" → verifica permissão CAMERA → abre câmera nativa
- *  2. Câmera grava direto no File preparado pelo [FotoStorage]
- *  3. Foto aparece no preview
- *  4. Gestor preenche descrição, local (opcional) e seleciona categoria
- *  5. "Salvar" chama [AchadosViewModel.adicionarItem] e volta ao menu
- */
 @Composable
 fun NovoAchado(
     achadosVM: AchadosViewModel,
@@ -79,19 +69,16 @@ fun NovoAchado(
     var arquivoFoto by remember { mutableStateOf<File?>(null) }
     var uriDestino by remember { mutableStateOf<Uri?>(null) }
 
-    // ── Launcher da câmera ──────────────────────────────────────────────────
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { sucesso ->
         if (!sucesso) {
-            // Usuário cancelou ou erro — descarta o arquivo temporário
             arquivoFoto?.delete()
             arquivoFoto = null
             uriDestino = null
         }
     }
 
-    // ── Launcher de permissão da câmera ─────────────────────────────────────
     val permissaoCamera = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { concedida ->
@@ -103,14 +90,10 @@ fun NovoAchado(
         }
     }
 
-    // ── Launcher do Photo Picker (galeria) ──────────────────────────────────
-    // PickVisualMedia: API moderna, não exige permissão READ_*, mostra só fotos.
-    // Disponível em todas as versões via androidx.activity 1.7+ (backport).
     val galeriaLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uriOrigem ->
         if (uriOrigem != null) {
-            // Apaga a foto anterior (se já havia uma escolhida) para não deixar lixo
             arquivoFoto?.delete()
             val copia = FotoStorage.copiarDaGaleria(context, uriOrigem)
             arquivoFoto = copia
@@ -133,7 +116,6 @@ fun NovoAchado(
         }
     }
 
-    // Pré-seleciona a primeira categoria quando carregam
     LaunchedEffect(categorias) {
         if (catSelecionada == null && categorias.isNotEmpty()) {
             catSelecionada = categorias.first()
@@ -154,7 +136,6 @@ fun NovoAchado(
             color = MaterialTheme.colorScheme.onBackground
         )
 
-        // ── Preview / câmera ────────────────────────────────────────────────
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -189,7 +170,6 @@ fun NovoAchado(
             }
         }
 
-        // ── Botões: Câmera + Galeria lado a lado ───────────────────────────
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -225,7 +205,6 @@ fun NovoAchado(
             }
         }
 
-        // ── Campos ──────────────────────────────────────────────────────────
         OutlinedTextField(
             value = descricao,
             onValueChange = { descricao = it },
@@ -247,7 +226,6 @@ fun NovoAchado(
             textStyle = MaterialTheme.typography.titleMedium
         )
 
-        // ── Dropdown de categoria (Box + OutlinedButton + DropdownMenu) ─────
         Box(modifier = Modifier.fillMaxWidth()) {
             OutlinedButton(
                 onClick = { dropdownAberto = true },
@@ -285,7 +263,6 @@ fun NovoAchado(
 
         Spacer(Modifier.height(8.dp))
 
-        // ── Ações ───────────────────────────────────────────────────────────
         val podeSalvar = descricao.isNotBlank() && catSelecionada != null
         Button(
             onClick = {

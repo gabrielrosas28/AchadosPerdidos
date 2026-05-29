@@ -39,10 +39,6 @@ import androidx.compose.ui.unit.sp
 import com.escola.achadosperdidos.data.model.StatusItem
 import com.escola.achadosperdidos.viewmodel.AchadosViewModel
 
-// ════════════════════════════════════════════════════════════════════════════
-//  Rotas internas do Painel
-// ════════════════════════════════════════════════════════════════════════════
-
 private sealed interface RotaAdmin {
     data object Menu : RotaAdmin
     data object NovoAchado : RotaAdmin
@@ -53,19 +49,6 @@ private sealed interface RotaAdmin {
     data object Sincronizar : RotaAdmin
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-//  Root do Painel do Gestor
-// ════════════════════════════════════════════════════════════════════════════
-
-/**
- * Painel do Gestor — entrada após autenticação por PIN.
- *
- * Contém 4 ações principais (mockup):
- *  - ➕ Novo Achado    → cadastra item com câmera
- *  - 📁 Nova Categoria → cria categoria dinâmica
- *  - ✔️ Entregar Item  → dá baixa (status → Devolvido)
- *  - 📜 Histórico      → lista devoluções
- */
 @Composable
 fun PainelGestor(
     achadosVM: AchadosViewModel,
@@ -73,7 +56,6 @@ fun PainelGestor(
 ) {
     var rota by remember { mutableStateOf<RotaAdmin>(RotaAdmin.Menu) }
 
-    // Botão voltar físico: subtelas voltam ao menu; no menu, fecha o modo gestor.
     BackHandler {
         if (rota == RotaAdmin.Menu) {
             achadosVM.limparFiltros()
@@ -84,7 +66,6 @@ fun PainelGestor(
         }
     }
 
-    // Reseta filtros ao sair do modo gestor.
     LaunchedEffect(Unit) {
         achadosVM.limparFiltros()
     }
@@ -146,10 +127,6 @@ private fun quandoSubtela(r: RotaAdmin): String? = when (r) {
     RotaAdmin.Sincronizar    -> "Sincronizar"
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-//  Top bar do Painel
-// ════════════════════════════════════════════════════════════════════════════
-
 @Composable
 private fun TopoGestor(
     tituloSubtela: String?,
@@ -202,10 +179,6 @@ private fun TopoGestor(
         }
     }
 }
-
-// ════════════════════════════════════════════════════════════════════════════
-//  Menu de 4 botões grandes
-// ════════════════════════════════════════════════════════════════════════════
 
 @Composable
 private fun MenuGestor(

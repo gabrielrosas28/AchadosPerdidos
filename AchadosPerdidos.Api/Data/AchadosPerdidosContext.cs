@@ -33,7 +33,6 @@ public class AchadosPerdidosContext : DbContext
             e.HasIndex(i => i.DataCadastro);
         });
 
-        // --- Seed das categorias iniciais ---
         var seedDate = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         mb.Entity<Categoria>().HasData(
             new Categoria { Id = 1, Nome = "Material didático",     Ativa = true, DataCriacao = seedDate, Emoji = "📘" },

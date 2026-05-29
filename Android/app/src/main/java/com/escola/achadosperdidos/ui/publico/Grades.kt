@@ -33,10 +33,6 @@ import com.escola.achadosperdidos.R
 import com.escola.achadosperdidos.data.local.ItemComCategoria
 import com.escola.achadosperdidos.data.model.Categoria
 
-// ════════════════════════════════════════════════════════════════════════════
-//  Grade de categorias (tela inicial do Modo Público)
-// ════════════════════════════════════════════════════════════════════════════
-
 @Composable
 fun GradeCategorias(
     categorias: List<Categoria>,
@@ -55,7 +51,6 @@ fun GradeCategorias(
         )
 
         LazyVerticalGrid(
-            // Adaptativo: em tablet portrait ~800dp dá 2-3 cols; landscape dá mais.
             columns = GridCells.Adaptive(minSize = 200.dp),
             contentPadding = PaddingValues(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -102,10 +97,6 @@ private fun CardCategoria(cat: Categoria, onClick: () -> Unit) {
         }
     }
 }
-
-// ════════════════════════════════════════════════════════════════════════════
-//  Grade de itens (após clicar numa categoria)
-// ════════════════════════════════════════════════════════════════════════════
 
 @Composable
 fun GradeItens(
@@ -156,7 +147,6 @@ private fun CardItem(itemCom: ItemComCategoria, onClick: () -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
         Column(Modifier.fillMaxSize()) {
-            // Área da foto — ocupa a maior parte do card
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -175,7 +165,6 @@ private fun CardItem(itemCom: ItemComCategoria, onClick: () -> Unit) {
                     }
                 }
             }
-            // Descrição
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

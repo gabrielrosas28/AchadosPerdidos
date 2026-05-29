@@ -40,21 +40,15 @@ data class Item(
 
     val dataDevolucao: Date? = null,
 
-    // Caminho ABSOLUTO da foto no armazenamento interno do tablet.
-    // Apagado pelo WorkManager quando o item for Devolvido ou após 180 dias.
     val caminhoFoto: String? = null,
 
-    // Nome do arquivo da foto no servidor após upload (devolvido pela API).
     val nomeArquivoFotoServidor: String? = null,
 
-    // UUID estável para idempotência na sincronização.
     val idLocalTablet: String = UUID.randomUUID().toString(),
 
-    // Preenchido após o item ser enviado com sucesso ao servidor.
     val idServidor: Int? = null,
 
     val sincronizado: Boolean = false,
 
-    // Identificador único do tablet (Settings.Secure.ANDROID_ID ou similar).
     val tabletId: String
 )

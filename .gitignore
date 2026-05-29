@@ -1,20 +1,16 @@
-## .NET
 bin/
 obj/
 *.user
 *.suo
 .vs/
 
-## Banco SQLite local de dev
 *.db
 *.db-shm
 *.db-wal
 
-## Uploads de runtime (backend)
 AchadosPerdidos.Api/wwwroot/fotos/*
 !AchadosPerdidos.Api/wwwroot/fotos/.gitkeep
 
-## Android / Gradle / Kotlin
 .gradle/
 **/build/
 *.iml
@@ -23,22 +19,17 @@ captures/
 .externalNativeBuild/
 *.kotlin_module
 
-## Caminhos específicos da máquina — NÃO subir
 Android/local.properties
 
-## Saídas
 *.apk
 *.aar
 *.ap_
 *.dex
 
-## Build de publicação do backend (.NET)
 publish-output/
 publish/
 
-## Kotlin compile cache (gerado pelo Gradle)
 .kotlin/
 
-## IDEs
 .idea/
 .vscode/

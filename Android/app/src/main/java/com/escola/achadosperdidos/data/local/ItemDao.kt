@@ -12,10 +12,6 @@ import com.escola.achadosperdidos.data.model.StatusItem
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
 
-/**
- * Projeção usada nas telas de listagem — junta o item com o nome da categoria
- * para evitar N+1 ao renderizar a grade do Modo Público.
- */
 data class ItemComCategoria(
     @Embedded val item: Item,
     val categoriaNome: String
@@ -53,19 +49,18 @@ interface ItemDao {
     @Query("SELECT * FROM itens WHERE id = :id")
     suspend fun obterPorId(id: Long): Item?
 
+    @Query("SELECT * FROM itens WHERE idLocalTablet = :uuid LIMIT 1")
+    suspend fun obterPorIdLocalTablet(uuid: String): Item?
+
+    @Query("SELECT * FROM itens WHERE idServidor = :idServidor LIMIT 1")
+    suspend fun obterPorIdServidor(idServidor: Int): Item?
+
     @Query("SELECT * FROM itens WHERE sincronizado = 0")
     suspend fun obterNaoSincronizados(): List<Item>
 
-    /** Snapshot único de todos os itens — usado pelo export de backup. */
     @Query("SELECT * FROM itens ORDER BY dataCadastro DESC")
     suspend fun obterTodos(): List<Item>
 
-    /**
-     * Critério de limpeza de fotos (consumido pelo WorkManager no Passo 3):
-     *  - Item devolvido (status = 'Devolvido'); OU
-     *  - Item cadastrado há mais de 180 dias (dataCadastro <= limiteAntigo).
-     * Só retorna quando ainda existe foto local para apagar.
-     */
     @Query("""
         SELECT * FROM itens
         WHERE caminhoFoto IS NOT NULL
@@ -85,11 +80,6 @@ interface ItemDao {
     @Query("UPDATE itens SET caminhoFoto = NULL WHERE id = :id")
     suspend fun limparCaminhoFoto(id: Long)
 
-    /**
-     * Marca como sincronizado.
-     * [idServidor] pode ser null porque o endpoint de batch não retorna IDs individuais;
-     * uma futura chamada a [observarTodos]/sync delta preencherá quando disponível.
-     */
     @Query("""
         UPDATE itens
            SET sincronizado = 1,

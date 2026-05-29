@@ -49,17 +49,6 @@ import com.escola.achadosperdidos.ui.publico.emojiDe
 import com.escola.achadosperdidos.ui.publico.emojiParaCategoria
 import com.escola.achadosperdidos.viewmodel.AchadosViewModel
 
-/**
- * Tela do gestor para **criar e editar** categorias.
- *
- * Layout:
- *  - Form de criação no topo (nome + emoji escolhível)
- *  - Lista das categorias existentes — **tocar num item abre o dialog de edição**
- *
- * Dialog de edição:
- *  - Edita nome + emoji
- *  - Botão para desativar (ou reativar, se já está desativada)
- */
 @Composable
 fun NovaCategoria(
     achadosVM: AchadosViewModel,
@@ -73,7 +62,6 @@ fun NovaCategoria(
     var erro by remember { mutableStateOf<String?>(null) }
     var emEdicao by remember { mutableStateOf<Categoria?>(null) }
 
-    // Quando o gestor não escolheu emoji ainda, sugerimos o heurístico do nome.
     val emojiPreview: String = emojiEscolhido?.takeIf { it.isNotBlank() }
         ?: emojiParaCategoria(nome.ifBlank { "outros" })
 
@@ -90,7 +78,6 @@ fun NovaCategoria(
             color = MaterialTheme.colorScheme.onBackground
         )
 
-        // ── Form de criação ────────────────────────────────────────────────
         OutlinedTextField(
             value = nome,
             onValueChange = {
@@ -201,7 +188,6 @@ fun NovaCategoria(
         }
     }
 
-    // ── Dialog de edição ───────────────────────────────────────────────────
     emEdicao?.let { cat ->
         DialogEditarCategoria(
             categoria = cat,
@@ -222,10 +208,6 @@ fun NovaCategoria(
         )
     }
 }
-
-// ════════════════════════════════════════════════════════════════════════════
-//  Dialog de edição
-// ════════════════════════════════════════════════════════════════════════════
 
 @Composable
 private fun DialogEditarCategoria(
@@ -313,23 +295,11 @@ private fun DialogEditarCategoria(
     )
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-//  Seletor de emoji (grade compacta)
-// ════════════════════════════════════════════════════════════════════════════
-
-/**
- * Grade de emojis sugeridos + opção "Auto" (sem emoji fixo, deixa a heurística
- * decidir pelo nome). O selecionado fica com fundo destacado.
- *
- * Implementada como [Column] de [Row]s para evitar import-clash entre as
- * funções `items` de LazyListScope e LazyGridScope.
- */
 @Composable
 private fun SeletorEmoji(
     selecionado: String?,
     onSelecionar: (String?) -> Unit
 ) {
-    // "Auto" + 20 emojis, 7 por linha = 3 linhas
     val celulas: List<Pair<String, String?>> = buildList {
         add("auto" to null)
         EMOJIS_SUGERIDOS.forEach { add(it to it) }

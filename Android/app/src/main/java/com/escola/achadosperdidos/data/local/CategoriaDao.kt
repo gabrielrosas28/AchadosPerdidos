@@ -20,18 +20,15 @@ interface CategoriaDao {
     @Query("SELECT * FROM categorias WHERE id = :id")
     suspend fun obterPorId(id: Long): Categoria?
 
-    /** Busca pelo UUID estável (idempotência local). */
     @Query("SELECT * FROM categorias WHERE idLocalTablet = :uuid LIMIT 1")
     suspend fun obterPorUuid(uuid: String): Categoria?
 
-    /** Busca pelo ID atribuído pelo servidor (idempotência ao baixar/sincronizar). */
     @Query("SELECT * FROM categorias WHERE idServidor = :idServidor LIMIT 1")
     suspend fun obterPorIdServidor(idServidor: Int): Categoria?
 
     @Query("SELECT * FROM categorias WHERE idServidor IS NULL")
     suspend fun obterNaoSincronizadas(): List<Categoria>
 
-    /** Snapshot único de todas as categorias — usado pelo export de backup. */
     @Query("SELECT * FROM categorias ORDER BY nome")
     suspend fun obterTodas(): List<Categoria>
 

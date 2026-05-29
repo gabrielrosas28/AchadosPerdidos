@@ -8,7 +8,6 @@
 </head>
 <body>
 
-<!-- ═══ Cabeçalho ═══════════════════════════════════════════════════════ -->
 <header>
     <h1>👤 Achados e Perdidos — Colégio Santa Chiara</h1>
     <div class="header-right">
@@ -17,14 +16,12 @@
     </div>
 </header>
 
-<!-- ═══ Abas ═══════════════════════════════════════════════════════════ -->
 <nav class="tabs">
     <button class="tab active" data-tab="itens" type="button">📦 Itens</button>
     <button class="tab"       data-tab="categorias" type="button">📁 Categorias</button>
     <button class="tab"       data-tab="historico"  type="button">📜 Histórico</button>
 </nav>
 
-<!-- ═══ Conteúdo das abas ═══════════════════════════════════════════════ -->
 <main>
     <section id="tab-itens" class="tab-content active">
         <div class="actions">
@@ -47,7 +44,6 @@
     </section>
 </main>
 
-<!-- ═══ Modal: login (API key) ═════════════════════════════════════════ -->
 <div id="modal-login" class="modal" hidden>
     <div class="modal-content">
         <h2>🔐 Acesso ao Painel</h2>
@@ -60,7 +56,6 @@
     </div>
 </div>
 
-<!-- ═══ Modal: novo item ════════════════════════════════════════════════ -->
 <div id="modal-novo-item" class="modal" hidden>
     <div class="modal-content">
         <h2>➕ Novo Achado</h2>
@@ -86,7 +81,6 @@
     </div>
 </div>
 
-<!-- ═══ Modal: nova/editar categoria ════════════════════════════════════ -->
 <div id="modal-categoria" class="modal" hidden>
     <div class="modal-content">
         <h2 id="categoria-modal-titulo">📁 Nova Categoria</h2>
@@ -100,7 +94,6 @@
             <input type="text" id="categoria-emoji" placeholder="Cole um emoji ou clique abaixo" maxlength="8">
 
             <div class="emoji-grid" id="emoji-sugestoes">
-                <!-- Botões de sugestão preenchidos via JS -->
             </div>
 
             <label class="checkbox-label" id="categoria-ativa-wrap" hidden>
@@ -116,7 +109,6 @@
     </div>
 </div>
 
-<!-- ═══ Modal: confirmar remoção de categoria ═══════════════════════════ -->
 <div id="modal-remover-categoria" class="modal" hidden>
     <div class="modal-content">
         <h2>🗑️ Remover Categoria</h2>
@@ -131,7 +123,6 @@
     </div>
 </div>
 
-<!-- ═══ Modal: confirmar entrega ════════════════════════════════════════ -->
 <div id="modal-entregar" class="modal" hidden>
     <div class="modal-content">
         <h2>✔️ Confirmar Entrega</h2>
@@ -145,7 +136,6 @@
     </div>
 </div>
 
-<!-- ═══ Toast (mensagens flash) ═════════════════════════════════════════ -->
 <div id="toast" class="toast"></div>
 
 <script src="app.js"></script>

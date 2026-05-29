@@ -6,10 +6,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-/**
- * Tipografia inflada para tablets — o público-alvo (alunos pequenos, pais
- * lendo de longe) precisa de textos grandes e legíveis.
- */
 val TipografiaTablet = Typography(
     displayLarge    = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold,     fontSize = 56.sp),
     displayMedium   = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold,     fontSize = 44.sp),

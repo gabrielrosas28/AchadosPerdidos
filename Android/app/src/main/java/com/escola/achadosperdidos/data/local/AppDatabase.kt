@@ -26,7 +26,6 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         private const val DB_NAME = "achados_perdidos.db"
 
-        // Categorias que devem existir já na primeira execução do app.
         private val CATEGORIAS_PADRAO = listOf(
             "Material didático",
             "Lancheiras e garrafas",
@@ -45,7 +44,6 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     DB_NAME
                 )
-                    // Em desenvolvimento aceita reset; em produção trocar por Migrations explícitas.
                     .fallbackToDestructiveMigration()
                     .addCallback(SeedCallback(scope))
                     .build()
@@ -54,11 +52,6 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        /**
-         * Callback que insere as categorias iniciais APENAS quando o banco é criado
-         * pela primeira vez (após instalação ou wipe). Executa em IO para não bloquear
-         * a thread principal.
-         */
         private class SeedCallback(
             private val scope: CoroutineScope
         ) : RoomDatabase.Callback() {

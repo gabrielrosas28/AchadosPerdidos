@@ -1,79 +1,46 @@
 package com.escola.achadosperdidos.data.network
 
+import android.content.Context
 import android.util.Base64
 import android.util.Log
 import com.escola.achadosperdidos.data.local.CategoriaDao
 import com.escola.achadosperdidos.data.local.ItemDao
 import com.escola.achadosperdidos.data.model.Categoria
+import com.escola.achadosperdidos.data.model.Item
 import com.escola.achadosperdidos.data.network.dto.CriarCategoriaDto
 import com.escola.achadosperdidos.data.network.dto.StatusServidor
 import com.escola.achadosperdidos.data.network.dto.SyncItemDto
+import com.escola.achadosperdidos.ui.admin.FotoStorage
 import kotlinx.coroutines.delay
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
-/**
- * Coordena a sincronização offline-first entre o banco Room local e a API REST.
- *
- * **Fluxo:**
- * 1. Envia ao servidor categorias criadas localmente que ainda não têm [idServidor].
- * 2. Envia ao servidor itens marcados como `sincronizado = false`.
- * 3. Baixa categorias novas/alteradas no servidor e insere localmente.
- *
- * Chamado pelo [com.escola.achadosperdidos.data.worker.LimpezaFotoWorker]
- * (diariamente) ou manualmente pelo gestor.
- */
 class SyncRepository(
     private val api: ApiService,
     private val categoriaDao: CategoriaDao,
-    private val itemDao: ItemDao
+    private val itemDao: ItemDao,
+    private val appContext: Context
 ) {
 
     companion object {
         private const val TAG = "SyncRepository"
 
-        /**
-         * Itens enviados por request HTTP. Cada item carrega a foto em
-         * base64 (~1MB por foto inflado ~33%). Kestrel default aceita ~30MB
-         * por request; 5 itens por chunk = ~6.5MB, com folga.
-         */
         private const val TAMANHO_LOTE_ITENS = 5
 
-        /**
-         * Quantas vezes [sincronizarItens] varre a fila de pendentes antes
-         * de desistir. Cobre cenarios onde a Wi-Fi do tablet cai por alguns
-         * segundos no meio do envio — as proximas passadas reenviam o que
-         * ficou. Aborta cedo se uma passada inteira nao consegue enviar
-         * nenhum item (sinal de queda persistente do servidor/rede).
-         */
         private const val MAX_PASSADAS_SYNC = 5
 
-        /** Espera entre passadas quando ainda ha pendentes (ms). */
         private const val DELAY_ENTRE_PASSADAS_MS = 3_000L
 
-        /** Espera apos um lote que falhou por rede, antes do proximo (ms). */
         private const val DELAY_APOS_FALHA_DE_REDE_MS = 1_500L
 
-        /** Formato ISO-8601 UTC para envio de datas ao servidor .NET. */
         private val FMT_ISO = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply {
             timeZone = TimeZone.getTimeZone("UTC")
         }
+
+        private const val TABLET_ID_SERVIDOR = "servidor"
     }
 
-    // ── 1. Enviar categorias novas para o servidor ────────────────────────────
-
-    /**
-     * Para cada categoria local sem [idServidor]:
-     *  - Se ja existe no servidor uma categoria com o mesmo nome (seed ou
-     *    criada por outro tablet), apenas adota o `idServidor` dela (merge).
-     *  - Caso contrario, cria no servidor.
-     *
-     * Esse merge evita o loop infinito de HTTP 409 Conflict (unique constraint
-     * por nome no servidor) e garante que as categorias do tablet acabem com
-     * `idServidor` preenchido — pre-requisito pra `sincronizarItens` mapear
-     * o `categoriaServidorId` corretamente.
-     */
     suspend fun sincronizarCategorias() {
         val novas = categoriaDao.obterNaoSincronizadas()
         if (novas.isEmpty()) return
@@ -104,20 +71,6 @@ class SyncRepository(
         }
     }
 
-    // ── 2. Enviar itens pendentes para o servidor ─────────────────────────────
-
-    /**
-     * Faz ate [MAX_PASSADAS_SYNC] passadas sobre a fila de itens com
-     * `sincronizado = false`, enviando em lotes de [TAMANHO_LOTE_ITENS].
-     *
-     * Por que multiplas passadas: a Wi-Fi do tablet pode oscilar — uma
-     * passada manda 90% e os ultimos lotes caem por falha de rede. A proxima
-     * passada pega so o que restou (consulta o DAO de novo, ja sem os que
-     * subiram), e tenta tudo o que sobrou.
-     *
-     * Aborta cedo quando uma passada inteira nao consegue enviar nenhum
-     * item — sinal de queda persistente do servidor; nao adianta insistir.
-     */
     suspend fun sincronizarItens() {
         for (passada in 1..MAX_PASSADAS_SYNC) {
             val pendentes = itemDao.obterNaoSincronizados()
@@ -166,12 +119,6 @@ class SyncRepository(
         val totalLotes: Int,
     )
 
-    /**
-     * Uma passada: monta o payload de [pendentes], divide em chunks e envia
-     * cada chunk. Itens cujo chunk teve sucesso vao pra `sincronizado = 1`.
-     * Aplica um pequeno [DELAY_APOS_FALHA_DE_REDE_MS] depois de cada falha
-     * de rede pra dar tempo da conexao se restabelecer antes do proximo chunk.
-     */
     private suspend fun enviarLotesPendentes(
         pendentes: List<com.escola.achadosperdidos.data.model.Item>
     ): ResumoLotes {
@@ -231,8 +178,6 @@ class SyncRepository(
             } catch (e: Exception) {
                 Log.e(TAG, "Falha ao enviar lote ${idx + 1}/${chunks.size}: ${e.message}")
                 falhas++
-                // Pequena pausa antes do proximo lote — da tempo da Wi-Fi
-                // restabelecer e evita derrubar todos os lotes em cascata.
                 delay(DELAY_APOS_FALHA_DE_REDE_MS)
             }
         }
@@ -240,53 +185,158 @@ class SyncRepository(
         return ResumoLotes(criados, atualizados, falhas, chunks.size)
     }
 
-    // ── 3. Baixar categorias do servidor ─────────────────────────────────────
-
-    /**
-     * Baixa categorias do servidor e insere localmente as ausentes.
-     * Usa [CategoriaDao.obterPorIdServidor] para idempotência (não cria duplicatas).
-     */
     suspend fun baixarCategorias() {
-        try {
-            val remotas = api.baixarCategorias()
-            Log.d(TAG, "Recebidas ${remotas.size} categorias do servidor.")
-
-            remotas.forEach { dto ->
-                val jaExiste = categoriaDao.obterPorIdServidor(dto.id) != null
-                if (!jaExiste) {
-                    categoriaDao.inserirSeNaoExiste(
-                        Categoria(
-                            nome       = dto.nome,
-                            ativa      = dto.ativa,
-                            idServidor = dto.id
-                        )
-                    )
-                    Log.d(TAG, "Nova categoria recebida: '${dto.nome}' (id servidor=${dto.id})")
-                }
-            }
+        val remotas = try {
+            api.baixarCategorias()
         } catch (e: Exception) {
             Log.w(TAG, "Falha ao baixar categorias do servidor: ${e.message}")
+            return
+        }
+        Log.d(TAG, "Recebidas ${remotas.size} categorias do servidor.")
+
+        val locais = categoriaDao.obterTodas()
+
+        remotas.forEach { dto ->
+            val porServidor = locais.firstOrNull { it.idServidor == dto.id }
+                ?: categoriaDao.obterPorIdServidor(dto.id)
+            if (porServidor != null) {
+                if (porServidor.nome != dto.nome || porServidor.ativa != dto.ativa) {
+                    categoriaDao.atualizar(porServidor.copy(nome = dto.nome, ativa = dto.ativa))
+                    Log.d(TAG, "Categoria id servidor=${dto.id} atualizada ('${dto.nome}', ativa=${dto.ativa}).")
+                }
+                return@forEach
+            }
+
+            val porNome = locais.firstOrNull {
+                it.idServidor == null && it.nome.trim().equals(dto.nome.trim(), ignoreCase = true)
+            }
+            if (porNome != null) {
+                categoriaDao.marcarSincronizada(porNome.id, dto.id)
+                if (porNome.ativa != dto.ativa) {
+                    categoriaDao.atualizar(porNome.copy(idServidor = dto.id, ativa = dto.ativa))
+                }
+                Log.d(TAG, "Categoria '${dto.nome}' casada por nome → adotou id servidor=${dto.id}.")
+                return@forEach
+            }
+
+            categoriaDao.inserirSeNaoExiste(
+                Categoria(nome = dto.nome, ativa = dto.ativa, idServidor = dto.id)
+            )
+            Log.d(TAG, "Nova categoria recebida do servidor: '${dto.nome}' (id servidor=${dto.id}).")
         }
     }
 
-    // ── Ponto de entrada único ────────────────────────────────────────────────
+    suspend fun baixarItens() {
+        val remotos = try {
+            api.listarItens()
+        } catch (e: Exception) {
+            Log.w(TAG, "Falha ao baixar itens do servidor: ${e.message}")
+            return
+        }
+        Log.d(TAG, "Recebidos ${remotos.size} itens do servidor.")
 
-    /**
-     * Executa o ciclo completo na ordem correta — categorias antes dos itens,
-     * pois itens precisam que suas categorias já estejam mapeadas no servidor.
-     */
+        var inseridos = 0
+        var atualizados = 0
+
+        for (dto in remotos) {
+            val statusLocal = StatusServidor.deOrdinal(dto.status)
+            val devolucao = parseDataServidor(dto.dataDevolucao)
+
+            val porUuid = dto.idLocalTablet
+                ?.takeIf { it.isNotBlank() }
+                ?.let { itemDao.obterPorIdLocalTablet(it) }
+            if (porUuid != null) {
+                if (porUuid.idServidor != dto.id || porUuid.status != statusLocal ||
+                    porUuid.dataDevolucao != devolucao
+                ) {
+                    itemDao.atualizar(
+                        porUuid.copy(
+                            idServidor    = dto.id,
+                            status        = statusLocal,
+                            dataDevolucao = devolucao ?: porUuid.dataDevolucao
+                        )
+                    )
+                    atualizados++
+                }
+                continue
+            }
+
+            val porServidor = itemDao.obterPorIdServidor(dto.id)
+            if (porServidor != null) {
+                if (porServidor.status != statusLocal || porServidor.dataDevolucao != devolucao) {
+                    itemDao.atualizar(
+                        porServidor.copy(status = statusLocal, dataDevolucao = devolucao)
+                    )
+                    atualizados++
+                }
+                continue
+            }
+
+            val catLocal = categoriaDao.obterPorIdServidor(dto.categoriaId)
+            if (catLocal == null) {
+                Log.w(TAG, "Item servidor id=${dto.id} ignorado: categoria " +
+                        "${dto.categoriaId} ('${dto.categoriaNome}') ainda nao existe local.")
+                continue
+            }
+
+            val caminhoFoto = if (!dto.urlFoto.isNullOrBlank()) baixarFoto(dto.urlFoto) else null
+
+            val novo = Item(
+                descricao               = dto.descricao,
+                localEncontrado         = dto.localEncontrado,
+                categoriaId             = catLocal.id,
+                status                  = statusLocal,
+                dataCadastro            = parseDataServidor(dto.dataCadastro) ?: Date(),
+                dataDevolucao           = devolucao,
+                caminhoFoto             = caminhoFoto,
+                nomeArquivoFotoServidor = dto.urlFoto?.substringAfterLast('/')?.takeIf { it.isNotBlank() },
+                idLocalTablet           = dto.idLocalTablet?.takeIf { it.isNotBlank() }
+                    ?: UUID.randomUUID().toString(),
+                idServidor              = dto.id,
+                sincronizado            = true,
+                tabletId                = dto.tabletId?.takeIf { it.isNotBlank() } ?: TABLET_ID_SERVIDOR
+            )
+            try {
+                itemDao.inserir(novo)
+                inseridos++
+                Log.d(TAG, "Item servidor id=${dto.id} ('${dto.descricao}') inserido localmente.")
+            } catch (e: Exception) {
+                Log.w(TAG, "Falha ao inserir item servidor id=${dto.id}: ${e.message}")
+            }
+        }
+
+        Log.i(TAG, "Download de itens concluido — inseridos=$inseridos, atualizados=$atualizados.")
+    }
+
+    private suspend fun baixarFoto(url: String): String? {
+        return try {
+            val corpo = api.baixarArquivo(url)
+            val bytes = corpo.use { it.bytes() }
+            FotoStorage.salvarBytes(appContext, bytes)?.absolutePath
+        } catch (e: Exception) {
+            Log.w(TAG, "Falha ao baixar foto '$url': ${e.message}")
+            null
+        }
+    }
+
+    private fun parseDataServidor(iso: String?): Date? {
+        if (iso.isNullOrBlank()) return null
+        val base = iso.trim().substringBefore('.').removeSuffix("Z")
+        return try {
+            FMT_ISO.parse(base)
+        } catch (e: Exception) {
+            Log.w(TAG, "Data invalida do servidor: '$iso' (${e.message})")
+            null
+        }
+    }
+
     suspend fun sincronizarTudo() {
         sincronizarCategorias()
         sincronizarItens()
         baixarCategorias()
+        baixarItens()
     }
 
-    // ── Utilitários privados ─────────────────────────────────────────────────
-
-    /**
-     * Lê um arquivo de imagem do disco e retorna (base64, nomeArquivo).
-     * Retorna (null, null) se o caminho for nulo ou o arquivo não existir.
-     */
     private fun lerFotoComoBase64(caminho: String?): Pair<String?, String?> {
         if (caminho == null) return null to null
         val arquivo = File(caminho)

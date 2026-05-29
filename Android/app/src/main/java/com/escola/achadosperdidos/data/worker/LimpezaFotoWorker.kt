@@ -12,22 +12,6 @@ import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-/**
- * Worker periódico que executa duas tarefas de manutenção diariamente:
- *
- * **1. Limpeza de fotos locais**
- *    Remove do armazenamento interno do tablet as fotos de itens que:
- *    - Foram marcados como **Devolvido** pelo gestor; OU
- *    - Têm **mais de 180 dias** de cadastro.
- *    Após apagar o arquivo, limpa a coluna `caminhoFoto` no Room.
- *
- * **2. Sincronização com o servidor** (best-effort)
- *    Tenta enviar itens e categorias pendentes ao servidor Windows.
- *    Falhas de rede não impedem o resultado SUCCESS; o WorkManager reagendará.
- *
- * Registro: chame [LimpezaFotoWorker.agendar] na inicialização do app
- * (ver [AchadosPerdidosApp]).
- */
 class LimpezaFotoWorker(
     context: Context,
     params: WorkerParameters
@@ -36,14 +20,8 @@ class LimpezaFotoWorker(
     companion object {
         private const val TAG = "LimpezaFotoWorker"
 
-        /** Nome único para [WorkManager.enqueueUniquePeriodicWork]. */
         const val WORK_NAME = "limpeza_foto_diaria"
 
-        /**
-         * Agenda o worker para executar uma vez por dia, apenas quando a bateria
-         * não estiver baixa. Usa [ExistingPeriodicWorkPolicy.KEEP] para não
-         * substituir um agendamento existente após reinicialização do app.
-         */
         fun agendar(context: Context) {
             val constraints = Constraints.Builder()
                 .setRequiresBatteryNotLow(true)
@@ -74,7 +52,6 @@ class LimpezaFotoWorker(
         val itemDao   = app.database.itemDao()
         val catDao    = app.database.categoriaDao()
 
-        // ── 1. Limpeza de fotos ───────────────────────────────────────────────
         val limite180Dias = Date(System.currentTimeMillis() - 180L * 24 * 60 * 60 * 1000)
         val paraLimpar    = itemDao.obterParaLimpezaFoto(limite180Dias)
 
@@ -91,7 +68,6 @@ class LimpezaFotoWorker(
                         Log.w(TAG, "Não foi possível apagar: $caminho")
                     }
                 }
-                // Atualiza o Room independentemente (arquivo pode já ter sido apagado antes)
                 itemDao.limparCaminhoFoto(item.id)
             } catch (e: Exception) {
                 Log.w(TAG, "Erro ao processar foto do item id=${item.id}: ${e.message}")
@@ -100,14 +76,11 @@ class LimpezaFotoWorker(
 
         Log.i(TAG, "Limpeza concluída: $fotosApagadas/${paraLimpar.size} fotos apagadas.")
 
-        // ── 2. Sincronização com o servidor (best-effort) ─────────────────────
         try {
-            // Usa o singleton (já configurado em AchadosPerdidosApp.onCreate).
-            val sync = SyncRepository(ApiClient.obter(), catDao, itemDao)
+            val sync = SyncRepository(ApiClient.obter(), catDao, itemDao, applicationContext)
             sync.sincronizarTudo()
             Log.i(TAG, "Sincronização com servidor concluída.")
         } catch (e: Exception) {
-            // Falha de rede não bloqueia o sucesso da limpeza já realizada.
             Log.w(TAG, "Sync falhou (será retentado no próximo ciclo): ${e.message}")
         }
 

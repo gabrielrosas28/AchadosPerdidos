@@ -42,16 +42,11 @@ import com.escola.achadosperdidos.data.local.ItemComCategoria
 import com.escola.achadosperdidos.data.model.StatusItem
 import com.escola.achadosperdidos.viewmodel.AchadosViewModel
 
-/**
- * Listagem dos itens com status **Encontrado** — gestor toca em um para dar baixa
- * (status → Devolvido). Pop-up de confirmação evita baixas acidentais.
- */
 @Composable
 fun EntregarItem(
     achadosVM: AchadosViewModel,
     modifier: Modifier = Modifier
 ) {
-    // Garante o filtro correto ao entrar e restaura ao sair
     LaunchedEffect(Unit) {
         achadosVM.selecionarCategoria(null)
         achadosVM.setStatusFiltro(StatusItem.Encontrado)
@@ -101,7 +96,6 @@ fun EntregarItem(
         }
     }
 
-    // ── Dialog de confirmação ────────────────────────────────────────────────
     paraConfirmar?.let { ic ->
         AlertDialog(
             onDismissRequest = { paraConfirmar = null },

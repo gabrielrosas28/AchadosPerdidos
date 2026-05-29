@@ -6,36 +6,17 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
-/**
- * Singleton com a instância única do [ApiService] e do OkHttp.
- *
- * - **URL base** e **API Key** devem ser configuradas via [configurar] **antes** do primeiro
- *   uso (normalmente em [com.escola.achadosperdidos.AchadosPerdidosApp.onCreate]).
- *   Se não configurada, usa os padrões de desenvolvimento.
- * - Recriar OkHttp/Retrofit a cada chamada é caro (perde-se o pool de conexões),
- *   por isso é cacheado.
- */
 object ApiClient {
 
-    /**
-     * Fallback usado apenas quando [configurar] é chamado com `baseUrl` em branco.
-     * Em produção, a URL real vem de `BuildConfig.ACHADOS_BASE_URL` (lido de
-     * `local.properties` no build) e este valor nunca é consultado.
-     */
     const val BASE_URL_PADRAO = "http://192.168.15.61:5080/"
 
     @Volatile private var instancia: ApiService? = null
     @Volatile private var configAtual: Config = Config(BASE_URL_PADRAO, "")
 
-    /** Configuração atual em vigor. */
     val configuracao: Config get() = configAtual
 
     data class Config(val baseUrl: String, val apiKey: String)
 
-    /**
-     * Define a URL base e a API Key. Invalida a instância cacheada caso a configuração
-     * mude — a próxima chamada a [obter] cria um novo cliente.
-     */
     fun configurar(baseUrl: String, apiKey: String) {
         synchronized(this) {
             val nova = Config(baseUrl.ifBlank { BASE_URL_PADRAO }, apiKey)
@@ -46,13 +27,10 @@ object ApiClient {
         }
     }
 
-    /** Retorna o [ApiService] singleton, criando-o sob demanda. */
     fun obter(): ApiService =
         instancia ?: synchronized(this) {
             instancia ?: criar(configAtual).also { instancia = it }
         }
-
-    // ── interno ───────────────────────────────────────────────────────────────
 
     private fun criar(cfg: Config): ApiService {
         val logging = HttpLoggingInterceptor().apply {
@@ -62,7 +40,7 @@ object ApiClient {
         val okHttp = OkHttpClient.Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(30,  TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)   // uploads de fotos podem ser grandes
+            .writeTimeout(60, TimeUnit.SECONDS)
             .addInterceptor(logging)
             .addInterceptor { chain ->
                 val req = chain.request()

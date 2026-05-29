@@ -2,20 +2,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Permissões de rede (sincronização com o servidor) -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!-- Câmera (cadastro de fotos pelo gestor) -->
     <uses-permission android:name="android.permission.CAMERA" />
 
-    <!-- Armazenamento (Android 9 e abaixo) — no 10+ usamos MediaStore/FileProvider -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28"
         tools:ignore="ScopedStorage" />
 
-    <!-- Boot: abrir o app automaticamente assim que o tablet ligar -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
@@ -41,7 +37,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Auto-start no boot (e LOCKED_BOOT_COMPLETED em devices com criptografia de arquivo) -->
         <receiver
             android:name=".BootReceiver"
             android:exported="true"
@@ -54,10 +49,6 @@
             </intent-filter>
         </receiver>
 
-        <!--
-            FileProvider: necessário para compartilhar o Uri da foto com o intent da câmera
-            no Android 7+ sem expor file:// diretamente.
-        -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

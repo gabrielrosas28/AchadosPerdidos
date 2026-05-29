@@ -20,7 +20,6 @@ public class SyncController : ControllerBase
         _fotos = fotos;
     }
 
-    // Upload em lote (offline-first do tablet)
     [HttpPost("itens")]
     public async Task<ActionResult<SyncResponseDto>> EnviarItens([FromBody] List<SyncItemDto> lote)
     {
@@ -74,7 +73,6 @@ public class SyncController : ControllerBase
         return Ok(new SyncResponseDto(lote.Count, criados, atualizados, erros));
     }
 
-    // Download de categorias atualizadas (tablet usa para receber novas categorias do servidor)
     [HttpGet("categorias")]
     public async Task<ActionResult<IEnumerable<CategoriaDto>>> BaixarCategorias(DateTime? desde = null)
     {

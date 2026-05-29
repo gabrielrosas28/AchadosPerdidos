@@ -37,13 +37,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-/**
- * Listagem de **todos os itens já devolvidos** — somente leitura.
- *
- * As fotos locais costumam ter sido apagadas pelo
- * [com.escola.achadosperdidos.data.worker.LimpezaFotoWorker], então o texto
- * (descrição, local, data de devolução) é a fonte da informação.
- */
 @Composable
 fun Historico(
     achadosVM: AchadosViewModel,

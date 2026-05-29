@@ -42,10 +42,9 @@ public class ItensController : ControllerBase
         return Mapear(i, Request);
     }
 
-    // Upload com foto (multipart/form-data) — usado quando o tablet tem internet
     [HttpPost]
     [Consumes("multipart/form-data")]
-    [RequestSizeLimit(20_000_000)] // 20 MB
+    [RequestSizeLimit(20_000_000)]
     public async Task<ActionResult<ItemDto>> Criar(
         [FromForm] CriarItemDto dto,
         IFormFile? foto)

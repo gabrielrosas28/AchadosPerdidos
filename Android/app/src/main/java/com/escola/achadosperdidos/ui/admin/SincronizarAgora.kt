@@ -36,12 +36,6 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
-/**
- * Tela "Sincronizar Agora" do Painel do Gestor.
- *
- * Conta itens/categorias pendentes antes, dispara o ciclo completo via
- * [AchadosViewModel.sincronizarAgora] e mostra um resumo do que foi enviado.
- */
 @Composable
 fun SincronizarAgora(achadosVM: AchadosViewModel) {
     val context = LocalContext.current
