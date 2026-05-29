@@ -31,8 +31,8 @@ android {
         // - MINOR: nova feature (export de backup, nova tela admin, etc.).
         // - PATCH: correção de bug, ajuste cosmético.
         // versionCode é monotônico (incrementa 1 a cada build publicado).
-        versionCode   = 7
-        versionName   = "1.2.4"
+        versionCode   = 8
+        versionName   = "1.2.5"
 
         // BuildConfig.ACHADOS_BASE_URL / ACHADOS_API_KEY consumidos pelo
         // ApiClient via AchadosPerdidosApp.onCreate. Trocar rede = editar

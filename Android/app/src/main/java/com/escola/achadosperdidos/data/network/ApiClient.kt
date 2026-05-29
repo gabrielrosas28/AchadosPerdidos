@@ -22,7 +22,7 @@ object ApiClient {
      * Em produção, a URL real vem de `BuildConfig.ACHADOS_BASE_URL` (lido de
      * `local.properties` no build) e este valor nunca é consultado.
      */
-    const val BASE_URL_PADRAO = "http://localhost:5080/"
+    const val BASE_URL_PADRAO = "http://192.168.15.61:5080/"
 
     @Volatile private var instancia: ApiService? = null
     @Volatile private var configAtual: Config = Config(BASE_URL_PADRAO, "")
